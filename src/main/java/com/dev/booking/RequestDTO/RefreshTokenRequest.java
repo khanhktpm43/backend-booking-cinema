@@ -1,4 +1,4 @@
-package com.dev.booking.ResponseDTO;
+package com.dev.booking.RequestDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

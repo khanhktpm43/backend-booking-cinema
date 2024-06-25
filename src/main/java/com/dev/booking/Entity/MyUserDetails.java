@@ -1,23 +1,27 @@
 package com.dev.booking.Entity;
 
+import com.dev.booking.Repository.UserRoleRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class MyUserDetails implements UserDetails {
     private User user;
-    public MyUserDetails(User user){
+    private List<Role> roles;
+    public MyUserDetails(User user, List<Role> roles) {
         this.user = user;
+        this.roles = roles;
     }
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
-//        return user.getUserRoles().stream()
-//                .map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getName()))
-//                .collect(Collectors.toList());
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getCode()))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -28,6 +32,15 @@ public class MyUserDetails implements UserDetails {
     @Override
     public String getUsername() {
         return user.getUserName();
+    }
+    public String getName(){
+        return user.getName();
+    }
+    public String getEmail(){
+        return user.getEmail();
+    }
+    public String getPhone(){
+        return user.getPhone();
     }
 
     @Override

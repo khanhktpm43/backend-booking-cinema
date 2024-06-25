@@ -1,14 +1,13 @@
 package com.dev.booking.Controller;
 
 import com.dev.booking.RequestDTO.LoginDTO;
-import com.dev.booking.ResponseDTO.RefreshTokenRequest;
+import com.dev.booking.RequestDTO.RefreshTokenRequest;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.TokenDTO;
 import com.dev.booking.Service.AuthService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
