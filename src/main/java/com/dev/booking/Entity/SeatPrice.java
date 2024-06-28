@@ -1,5 +1,6 @@
 package com.dev.booking.Entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,8 +21,8 @@ public class SeatPrice {
 
     @ManyToOne
     @JoinColumn(name = "seatTypeID")
+   // @JsonManagedReference("seat-type-prices")
     private SeatType seatType;
-
     private boolean normalDay;
     private boolean weekend;
     private boolean specialDay;

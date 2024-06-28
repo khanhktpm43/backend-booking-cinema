@@ -1,5 +1,6 @@
 package com.dev.booking.Entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,10 +18,12 @@ public class UserRole {
 
     @ManyToOne
     @JoinColumn(name = "userID")
+   // @JsonManagedReference("user-roles")
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "roleID")
+   // @JsonManagedReference("user-roles")
     private Role role;
 
     // Getters and Setters

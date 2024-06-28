@@ -1,6 +1,7 @@
 package com.dev.booking.Entity;
 
 import com.dev.booking.Repository.UserRoleRepository;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -11,7 +12,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class MyUserDetails implements UserDetails {
+    @Getter
     private User user;
+    @Getter
     private List<Role> roles;
     public MyUserDetails(User user, List<Role> roles) {
         this.user = user;
@@ -22,6 +25,7 @@ public class MyUserDetails implements UserDetails {
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority(role.getCode()))
                 .collect(Collectors.toList());
+
     }
 
     @Override
@@ -33,9 +37,13 @@ public class MyUserDetails implements UserDetails {
     public String getUsername() {
         return user.getUserName();
     }
+    public Long getId(){
+        return this.user.getId();
+    }
     public String getName(){
         return user.getName();
     }
+
     public String getEmail(){
         return user.getEmail();
     }

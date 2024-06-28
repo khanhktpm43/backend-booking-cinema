@@ -1,16 +1,26 @@
 package com.dev.booking.RequestDTO;
 
-import com.dev.booking.Entity.Role;
-import com.dev.booking.Entity.User;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegisterRequest  {
-    private User user;
-    private List<Role> roleList;
+public class RegisterRequest {
+    private String name;
+
+
+    private String userName;
+
+
+    private String phone;
+
+
+    private String email;
+
+
+    private String passWord;
+
 }

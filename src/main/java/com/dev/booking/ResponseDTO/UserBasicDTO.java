@@ -5,10 +5,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class ResponseObject<T> {
-    private String error;
-    private T data;
-
+@AllArgsConstructor
+public class UserBasicDTO {
+    private Long id;
+    private String name;
+    private String email;
 }

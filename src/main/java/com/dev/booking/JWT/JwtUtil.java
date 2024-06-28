@@ -27,8 +27,8 @@ public class JwtUtil {
         }
     }
 
-    public String generateToken(String username) {
-        Map<String, Object> claims = new HashMap<>();
+    public String generateToken(Map<String, Object> claims,String username) {
+       // Map<String, Object> claims = new HashMap<>();
         return createToken(claims, username);
     }
 
@@ -50,8 +50,8 @@ public class JwtUtil {
         return false;
     }
 
-    public String generateRefreshToken(String username) {
-        Map<String, Object> claims = new HashMap<>();
+    public String generateRefreshToken(  Map<String, Object> claims,  String username) {
+//        Map<String, Object> claims = new HashMap<>();
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)

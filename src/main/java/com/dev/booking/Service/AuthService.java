@@ -1,5 +1,6 @@
 package com.dev.booking.Service;
 
+import com.dev.booking.Entity.MyUserDetails;
 import com.dev.booking.JWT.JwtUtil;
 import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.RequestDTO.LoginDTO;
@@ -14,6 +15,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class AuthService {
@@ -37,8 +41,12 @@ public class AuthService {
             );
             UserDetails userDetails = userDetailsService.loadUserByUsername(authentication.getName());
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            String accessToken = jwtUtil.generateToken(userDetails.getUsername());
-            String refreshToken = jwtUtil.generateRefreshToken(userDetails.getUsername());
+            MyUserDetails myUserDetails = (MyUserDetails) authentication.getPrincipal();
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("id",myUserDetails.getId());
+            claims.put("role", myUserDetails.getAuthorities());
+            String accessToken = jwtUtil.generateToken(claims,userDetails.getUsername());
+            String refreshToken = jwtUtil.generateRefreshToken(claims,userDetails.getUsername());
 
             return new TokenDTO(accessToken,refreshToken);
         } catch (AuthenticationException e){
@@ -49,7 +57,13 @@ public class AuthService {
     public TokenDTO renewAccessToken(RefreshTokenRequest refreshTokenRequest){
         String username = jwtUtil.extractUsername(refreshTokenRequest.getRefreshToken());
         if(jwtUtil.validateToken(refreshTokenRequest.getRefreshToken(), username)){
-            String accessToken = jwtUtil.generateToken(username);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            Long idFromToken = jwtUtil.extractClaim(refreshTokenRequest.getRefreshToken(), claims -> (Long) claims.get("id"));
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("id",idFromToken);
+            claims.put("role", userDetails.getAuthorities());
+
+            String accessToken = jwtUtil.generateToken(claims, username);
             return new TokenDTO(accessToken,refreshTokenRequest.getRefreshToken());
         }
         return null;

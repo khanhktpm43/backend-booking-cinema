@@ -1,5 +1,6 @@
 package com.dev.booking.Entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,10 +18,12 @@ public class CustomerOrder {
 
     @ManyToOne
     @JoinColumn(name = "bookingID")
+   // @JsonManagedReference("booking-orders")
     private Booking booking;
 
     @ManyToOne
     @JoinColumn(name = "foodID")
+   // @JsonManagedReference("food-orders")
     private Food food;
 
     @Column(nullable = false)
