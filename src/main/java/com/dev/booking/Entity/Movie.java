@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Date;
 import java.util.Set;
@@ -24,7 +25,7 @@ public class Movie {
     private String name;
 
     @Column(nullable = false)
-    private Date releaseDate;
+    private LocalDateTime releaseDate;
 
     @Lob
     private byte[] image;
@@ -51,7 +52,7 @@ public class Movie {
     //@JsonBackReference("movie-showtimes")
     private Set<Showtime> showtimes;
 
-    public Movie(Long movieId, String movieName, Date release, byte[] image, String overview, byte[] trailer, Integer duration) {
+    public Movie(Long movieId, String movieName, LocalDateTime release, byte[] image, String overview, byte[] trailer, Integer duration) {
         this.id = movieId;
         this.name = movieName;
         this.releaseDate = release;

@@ -55,7 +55,7 @@ public class UserService {
 
         User user = new User(request.getName(), request.getUserName(), request.getEmail(), request.getPhone(),passwordEncoder.encode(request.getPassWord()));
         user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
+      //  user.setUpdatedAt(LocalDateTime.now());
         User user1 = userRepository.save(user);
         user1.setCreatedBy(user1);
 
@@ -63,7 +63,8 @@ public class UserService {
             Role roleDefault = roleRepository.getByCode("ROLE_GUEST");
             UserRole userRole = new UserRole();
             userRole.setUser(user);
-            userRole.setRole(roleDefault);
+            userRole.setRole(roleDefault); userRole.setCreatedBy(user1.getId());
+            userRole.setCreatedAt(LocalDateTime.now());
             userRoleRepository.save(userRole);
         LoginDTO loginDTO = new LoginDTO(user.getUserName(), request.getPassWord());
             TokenDTO tokenDTO = authService.login(loginDTO);
@@ -89,22 +90,23 @@ public class UserService {
             List<Role> roles = new ArrayList<>();
             User user = new User(createUserRequest.getUser().getName(), createUserRequest.getUser().getUserName(), createUserRequest.getUser().getEmail(), createUserRequest.getUser().getPhone(),passwordEncoder.encode(createUserRequest.getUser().getPassWord()));
             user.setCreatedAt(LocalDateTime.now());
-            user.setUpdatedAt(LocalDateTime.now());
+           // user.setUpdatedAt(LocalDateTime.now());
             user.setCreatedBy(userReq);
             User user1 = userRepository.save(user);
 
 
             UserBasicDTO createdBy = convertToCreatedBasicDto(userReq);
-            UserBasicDTO updateBy = null;
+
             if( createUserRequest.getRoles().isEmpty()){
                 Role roleDefault = roleRepository.getByCode("ROLE_GUEST");
                 UserRole userRole = new UserRole();
-                userRole.setUser(user);
+                userRole.setUser(user1);
                 userRole.setRole(roleDefault);
-
+                userRole.setCreatedBy(userReq.getId());
+                userRole.setCreatedAt(LocalDateTime.now());
                 roles.add(roleDefault);
                 userRoleRepository.save(userRole);
-                return new UserDetailResponse(user1,createdBy,updateBy,roles);
+                return new UserDetailResponse(user1,createdBy,null,roles);
             }
             for (Role role : createUserRequest.getRoles()) {
 
@@ -114,11 +116,13 @@ public class UserService {
                     UserRole userRole = new UserRole();
                     userRole.setUser(user);
                     userRole.setRole(role);
+                    userRole.setCreatedBy(userReq.getId());
+                    userRole.setCreatedAt(LocalDateTime.now());
                     userRoleRepository.save(userRole);
                 }
 
             }
-            return  new UserDetailResponse(user1,createdBy,updateBy,roles);
+            return  new UserDetailResponse(user1,createdBy,null,roles);
         }catch (DataIntegrityViolationException e) {
             // In ra stack trace để debug
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();

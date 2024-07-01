@@ -7,6 +7,7 @@ import com.dev.booking.ResponseDTO.MovieResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.Service.MovieService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,7 +45,7 @@ public class MovieController {
 
     @PostMapping("")
     public ResponseEntity<ResponseObject<Movie>> create(@RequestParam("name") String name,
-                                                 @RequestParam("releaseDate") Date releaseDate,
+                                                 @RequestParam("releaseDate")  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime releaseDate,
                                                  @RequestParam("overview") String overview,
                                                  @RequestParam("duration") int duration,
                                                  @RequestParam("image") MultipartFile image,
@@ -69,7 +70,7 @@ public class MovieController {
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<Movie>> update(@PathVariable Long id,
                                                  @RequestParam("name") String name,
-                                                 @RequestParam("releaseDate") Date releaseDate,
+                                                 @RequestParam("releaseDate")  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime releaseDate,
                                                  @RequestParam("overview") String overview,
                                                  @RequestParam("duration") int duration,
                                                  @RequestParam("image") MultipartFile image,

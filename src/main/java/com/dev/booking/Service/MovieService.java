@@ -9,6 +9,7 @@ import com.dev.booking.ResponseDTO.MovieResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -28,7 +29,7 @@ public class MovieService {
             byte[] image = (byte[]) result[2];
             String movieName= (String) result[3];
             String overview = (String) result[4];
-            Date release = (Date) result[5];
+            LocalDateTime release = (LocalDateTime) result[5];
             byte[] trailer = (byte[]) result[6];
             Movie movie = new Movie(movieId,movieName,release,image,overview,trailer,duration);
 

@@ -36,12 +36,12 @@ public class User {
     private String passWord;
 
     @JsonIgnore
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "createdBy")
     private User createdBy;
 
     @JsonIgnore
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "updatedBy")
     private User updatedBy;
 
@@ -53,16 +53,16 @@ public class User {
 
     @JsonIgnore
 //    @OneToMany(mappedBy = "createdBy")
-@OneToMany(mappedBy = "createdBy")
+@OneToMany(mappedBy = "createdBy",fetch = FetchType.LAZY)
 //@JsonIgnoreProperties({"createdBy"})
     private Set<User> createdUsers;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "updatedBy")
+    @OneToMany(mappedBy = "updatedBy",fetch = FetchType.LAZY)
     private Set<User> updatedUsers;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
   //  @JsonBackReference("user-roles")
     private Set<UserRole> userRoles;
 
@@ -70,6 +70,7 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
  //   @JsonBackReference("user-bookings")
     private Set<Booking> bookings;
+
 
     public User(String name, String userName, String email, String phone, String passWord) {
         this.name = name;
@@ -79,5 +80,18 @@ public class User {
         this.passWord = passWord;
     }
 
-    // Getters and Setters
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", userName='" + userName + '\'' +
+                ", phone='" + phone + '\'' +
+                ", email='" + email + '\'' +
+                ", passWord='" + passWord + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
+    }
+// Getters and Setters
 }
