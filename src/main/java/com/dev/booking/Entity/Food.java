@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Data
@@ -21,6 +22,7 @@ public class Food {
     private Long id;
 
     @Lob
+    @Column(columnDefinition = "MEDIUMBLOB")
     private byte[] image;
 
     @Column(nullable = false)
@@ -28,6 +30,20 @@ public class Food {
 
     @Column(nullable = false)
     private float price;
+
+    @JsonIgnore
+    private Long createdBy;
+
+    @JsonIgnore
+    private Long updatedBy;
+
+    @Column(nullable = true)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = true)
+    private LocalDateTime updatedAt;
+
+
     @JsonIgnore
     @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true)
  //   @JsonBackReference("food-orders")

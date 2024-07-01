@@ -95,7 +95,7 @@ public class UserService {
             User user1 = userRepository.save(user);
 
 
-            UserBasicDTO createdBy = convertToCreatedBasicDto(userReq);
+            UserBasicDTO createdBy =new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
 
             if( createUserRequest.getRoles().isEmpty()){
                 Role roleDefault = roleRepository.getByCode("ROLE_GUEST");
@@ -201,7 +201,7 @@ public class UserService {
             }).collect(Collectors.toList());
 
     }
-    private UserBasicDTO convertToCreatedBasicDto(User user) {
+    public UserBasicDTO convertToCreatedBasicDto(User user) {
         if (user == null) {
             return null;
         }
@@ -215,7 +215,7 @@ public class UserService {
         dto.setEmail(user.getCreatedBy().getEmail());
         return dto;
     }
-    private UserBasicDTO convertToUpdatedBasicDto(User user) {
+    public UserBasicDTO convertToUpdatedBasicDto(User user) {
         if (user == null) {
             return null;
         }
