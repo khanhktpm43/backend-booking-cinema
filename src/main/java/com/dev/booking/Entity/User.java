@@ -61,10 +61,10 @@ public class User {
     @OneToMany(mappedBy = "updatedBy",fetch = FetchType.LAZY)
     private Set<User> updatedUsers;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
-  //  @JsonBackReference("user-roles")
-    private Set<UserRole> userRoles;
+//    @JsonIgnore
+//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
+//  //  @JsonBackReference("user-roles")
+//    private Set<UserRole> userRoles;
 
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -28,12 +28,15 @@ public class Movie {
     private LocalDateTime releaseDate;
 
     @Lob
+    @Column(columnDefinition = "MEDIUMBLOB")
     private byte[] image;
 
     @Lob
+
     private String overview;
 
     @Lob
+    @Column(columnDefinition = "LONGBLOB")
     private byte[] trailer;
 
     @Column(nullable = false)
