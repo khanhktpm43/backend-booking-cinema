@@ -77,7 +77,7 @@ public class UserRoleController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("User not exist",null));
     }
 
-    @PostMapping ("/{id}")
+    @DeleteMapping ("/{id}")
     ResponseEntity<ResponseObject<UserDetailResponse>> removeRole(@PathVariable Long id){
         if(userRoleRepository.existsById(id)){
             userRoleRepository.deleteById(id);

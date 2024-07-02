@@ -65,6 +65,7 @@ public class UserService {
             userRole.setUser(user);
             userRole.setRole(roleDefault); userRole.setCreatedBy(user1.getId());
             userRole.setCreatedAt(LocalDateTime.now());
+            userRole.setUpdatedAt(null);
             userRoleRepository.save(userRole);
         LoginDTO loginDTO = new LoginDTO(user.getUserName(), request.getPassWord());
             TokenDTO tokenDTO = authService.login(loginDTO);

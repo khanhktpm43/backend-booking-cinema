@@ -70,6 +70,7 @@ public class FoodService {
         food.setId(null);
         food.setCreatedBy(userReq.getId());
         food.setCreatedAt(LocalDateTime.now());
+        food.setUpdatedAt(null);
         Food food1 = foodRepository.save(food);
         UserBasicDTO createdBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail()) ;
         DetailResponse<Food> response = new DetailResponse<>(food1,createdBy,null);

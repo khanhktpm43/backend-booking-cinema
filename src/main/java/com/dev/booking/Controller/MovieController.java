@@ -103,6 +103,7 @@ public class MovieController {
             movie.setTrailer(trailer.getBytes());
             movie.setCreatedAt(LocalDateTime.now());
             movie.setCreatedBy(userReq.getId());
+            movie.setUpdatedAt(null);
             Movie newMovie = movieRepository.save(movie);
 
             UserBasicDTO createdBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
