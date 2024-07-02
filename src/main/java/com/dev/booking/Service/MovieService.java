@@ -7,8 +7,11 @@ import com.dev.booking.Repository.MovieRepository;
 import com.dev.booking.ResponseDTO.CastDTO;
 import com.dev.booking.ResponseDTO.MovieResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
+
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,9 +32,19 @@ public class MovieService {
             byte[] image = (byte[]) result[2];
             String movieName= (String) result[3];
             String overview = (String) result[4];
-            LocalDateTime release = (LocalDateTime) result[5];
+            Timestamp releaseTimestamp = (Timestamp) result[5];
+            LocalDateTime release = convertTimestampToLocalDateTime(releaseTimestamp);
+          //  LocalDateTime release =null ;// (LocalDateTime) result[5];
             byte[] trailer = (byte[]) result[6];
-            Movie movie = new Movie(movieId,movieName,release,image,overview,trailer,duration);
+            //LocalDateTime createdAt =null;// (LocalDateTime) result[7];
+            Timestamp createdAtTimestamp = (Timestamp) result[7];
+            LocalDateTime createdAt = convertTimestampToLocalDateTime(createdAtTimestamp);
+            Long createdBy = (Long) result[8];
+           // LocalDateTime updatedAt =null;// (LocalDateTime) result[9];
+            Timestamp updatedAtTimestamp = (Timestamp) result[9];
+            LocalDateTime updatedAt = convertTimestampToLocalDateTime(updatedAtTimestamp);
+            Long updatedBy = (Long) result[10];
+            Movie movie = new Movie(movieId,movieName,release,image,overview,trailer,duration,createdAt, createdBy, updatedAt, updatedBy);
 
             List<Genre> genres = new ArrayList<>();
             List<CastDTO> casts = new ArrayList<>();
@@ -44,11 +57,11 @@ public class MovieService {
 //                String overview = (String) obj[4];
 //                Date release = (Date) obj[5];
 //                byte[] trailer = (byte[]) obj[6];
-                Long genreId = (Long) obj[7];
-                String genreName = (String) obj[8];
-                Long castId = (Long) obj[9];
-                String castName = (String) obj[10];
-                Integer roleCast = (Integer) obj[11];
+                Long genreId = (Long) obj[11];
+                String genreName = (String) obj[12];
+                Long castId = (Long) obj[13];
+                String castName = (String) obj[14];
+                Integer roleCast = (Integer) obj[15];
 
                 Genre genre = new Genre();
                 genre.setId(genreId);
@@ -74,4 +87,8 @@ public class MovieService {
         }
         return null;
     }
+    private LocalDateTime convertTimestampToLocalDateTime(Timestamp timestamp) {
+        return timestamp != null ? timestamp.toLocalDateTime() : null;
+    }
+
 }

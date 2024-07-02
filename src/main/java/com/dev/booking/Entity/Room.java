@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Data
@@ -26,9 +27,20 @@ public class Room {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private boolean status;
+//    @Column(nullable = false)
+//    private boolean status;
 
+    @JsonIgnore
+    private Long createdBy;
+
+    @JsonIgnore
+    private Long updatedBy;
+
+    @Column(nullable = true)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = true)
+    private LocalDateTime updatedAt;
     @JsonIgnore
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     //@JsonBackReference("room-seats")

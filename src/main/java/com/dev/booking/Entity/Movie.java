@@ -1,15 +1,11 @@
 package com.dev.booking.Entity;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Date;
 import java.util.Set;
 @Data
 @Entity
@@ -43,6 +39,18 @@ public class Movie {
     private int duration;
 
     @JsonIgnore
+    private Long createdBy;
+
+    @JsonIgnore
+    private Long updatedBy;
+
+    @Column(nullable = true)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = true)
+    private LocalDateTime updatedAt;
+
+    @JsonIgnore
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
    // @JsonBackReference("movie-genres-movie")
     private Set<MovieGenre> movieGenres;
@@ -55,7 +63,7 @@ public class Movie {
     //@JsonBackReference("movie-showtimes")
     private Set<Showtime> showtimes;
 
-    public Movie(Long movieId, String movieName, LocalDateTime release, byte[] image, String overview, byte[] trailer, Integer duration) {
+    public Movie(Long movieId, String movieName, LocalDateTime release, byte[] image, String overview, byte[] trailer, Integer duration, LocalDateTime createdAt, Long createdBy, LocalDateTime updatedAt, Long updatedBy) {
         this.id = movieId;
         this.name = movieName;
         this.releaseDate = release;
@@ -63,6 +71,10 @@ public class Movie {
         this.overview = overview;
         this.trailer = trailer;
         this.duration = duration;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
+        this.updatedAt = updatedAt;
+        this.updatedBy = updatedBy;
     }
 
 //    @OneToMany(mappedBy = "movie")
