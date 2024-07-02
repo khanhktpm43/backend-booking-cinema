@@ -6,9 +6,12 @@ import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.FoodRepository;
 import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.ResponseDTO.DetailResponse;
+import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -67,6 +70,9 @@ public class FoodService {
 
         String username = (String) tokenAndUsername.get("username");
         User userReq = userRepository.findByUserName(username).orElse(null);
+        if(userReq == null){
+            return null;
+        }
         food.setId(null);
         food.setCreatedBy(userReq.getId());
         food.setCreatedAt(LocalDateTime.now());
@@ -83,6 +89,9 @@ public class FoodService {
             Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
             String username = (String) tokenAndUsername.get("username");
             User userReq = userRepository.findByUserName(username).orElse(null);
+            if(userReq == null){
+                return null;
+            }
             food1.setName(food.getName());
             food1.setPrice(food.getPrice());
             food1.setImage(food.getImage());

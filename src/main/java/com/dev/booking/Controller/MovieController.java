@@ -92,7 +92,10 @@ public class MovieController {
                                                         HttpServletRequest request) {
         Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
         String username = (String) tokenAndUsername.get("username");
-        User userReq = userRepository.findByUserName(username).orElseThrow();
+        User userReq = userRepository.findByUserName(username).orElse(null);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+        }
         try {
             Movie movie = new Movie();
             movie.setName(name);
@@ -129,7 +132,10 @@ public class MovieController {
             try {
                 Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
                 String username = (String) tokenAndUsername.get("username");
-                User userReq = userRepository.findByUserName(username).orElseThrow();
+                User userReq = userRepository.findByUserName(username).orElse(null);
+                if(userReq == null){
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+                }
                 Movie movie = movieRepository.findById(id).orElse(null);
                 movie.setId(id);
                 movie.setName(name);

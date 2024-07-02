@@ -1,6 +1,7 @@
 package com.dev.booking.Controller;
 
 import com.dev.booking.Entity.Food;
+import com.dev.booking.Entity.User;
 import com.dev.booking.Repository.FoodRepository;
 import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.ResponseDTO.DetailResponse;
@@ -58,7 +59,12 @@ public class FoodController {
         Example<Food> example = Example.of(food);
         if(!foodRepository.exists(example)){
             DetailResponse<Food> response = foodService.create(request, food);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("",response));
+            if(response != null)
+                return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("",response));
+
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("duplicate",null));
     }
@@ -76,7 +82,12 @@ public class FoodController {
             Example<Food> example = Example.of(food);
             if(!foodRepository.exists(example)){
                 DetailResponse<Food> response = foodService.update(id,request, food);
-                return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("",response));
+                if(response != null)
+                    return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("",response));
+
+
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("duplicate",null));
         }

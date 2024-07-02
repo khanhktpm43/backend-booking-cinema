@@ -88,7 +88,10 @@ public class RoomController {
         }
         Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
         String username = (String) tokenAndUsername.get("username");
-        User userReq = userRepository.findByUserName(username).orElseThrow();
+        User userReq = userRepository.findByUserName(username).orElse(null);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+        }
         room.setId(null);
         room.setCreatedBy(userReq.getId());
         room.setCreatedAt(LocalDateTime.now());
@@ -104,7 +107,10 @@ public class RoomController {
         if (roomRepository.existsById(id)) {
             Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
             String username = (String) tokenAndUsername.get("username");
-            User userReq = userRepository.findByUserName(username).orElseThrow();
+            User userReq = userRepository.findByUserName(username).orElse(null);
+            if(userReq == null){
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+            }
             Room room1 = roomRepository.findById(id).orElse(null);
             room1.setCode(room.getCode());
             room1.setName(room.getName());

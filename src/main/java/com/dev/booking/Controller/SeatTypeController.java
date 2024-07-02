@@ -82,7 +82,10 @@ public class SeatTypeController {
         }
         Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
         String username = (String) tokenAndUsername.get("username");
-        User userReq = userRepository.findByUserName(username).orElseThrow();
+        User userReq = userRepository.findByUserName(username).orElse(null);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+        }
         seatType.setId(null);
         seatType.setCreatedBy(userReq.getId());
         seatType.setCreatedAt(LocalDateTime.now());
@@ -98,7 +101,10 @@ public class SeatTypeController {
         if (seatTypeRepository.existsById(id)) {
             Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
             String username = (String) tokenAndUsername.get("username");
-            User userReq = userRepository.findByUserName(username).orElseThrow();
+            User userReq = userRepository.findByUserName(username).orElse(null);
+            if(userReq == null){
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+            }
             SeatType type = seatTypeRepository.findById(id).orElse(null);
             type.setCode(seatType.getCode());
             type.setName(seatType.getName());
