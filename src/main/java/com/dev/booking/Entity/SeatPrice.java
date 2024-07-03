@@ -1,5 +1,6 @@
 package com.dev.booking.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -36,6 +37,22 @@ public class SeatPrice {
     @Column(nullable = false)
     private float price;
 
+    @JsonIgnore
+    private Long createdBy;
+
+    @JsonIgnore
+    private Long updatedBy;
+
+    @Column(nullable = true)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = true)
+    private LocalDateTime updatedAt;
+
     // Getters and Setters
+    public boolean isValid(){
+//        if(seatType != null && normalDay != null,)
+        return true;
+    }
 }
 

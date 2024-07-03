@@ -17,11 +17,8 @@ import java.util.stream.Collectors;
 @Service
 public class SeatService {
     @Autowired
-    private SeatRepository seatRepository;
-    @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private JwtRequestFilter jwtRequestFilter;
+
 
     public List<DetailResponse<Seat>> mapSeatToSeatResponse(List<Seat> seats){
         List<DetailResponse<Seat>> result = seats.stream().map(seat -> {

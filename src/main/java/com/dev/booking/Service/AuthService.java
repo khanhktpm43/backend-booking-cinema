@@ -58,7 +58,17 @@ public class AuthService {
         String username = jwtUtil.extractUsername(refreshTokenRequest.getRefreshToken());
         if(jwtUtil.validateToken(refreshTokenRequest.getRefreshToken(), username)){
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            Long idFromToken = jwtUtil.extractClaim(refreshTokenRequest.getRefreshToken(), claims -> (Long) claims.get("id"));
+         //   Long idFromToken = jwtUtil.extractClaim(refreshTokenRequest.getRefreshToken(), claims -> (Long) claims.get("id"));
+            Long idFromToken = jwtUtil.extractClaim(refreshTokenRequest.getRefreshToken(), claims -> {
+                Object idObject = claims.get("id");
+                if (idObject instanceof Integer) {
+                    return ((Integer) idObject).longValue();
+                } else if (idObject instanceof Long) {
+                    return (Long) idObject;
+                } else {
+                    throw new IllegalArgumentException("Unsupported ID type in JWT claims");
+                }
+            });
             Map<String, Object> claims = new HashMap<>();
             claims.put("id",idFromToken);
             claims.put("role", userDetails.getAuthorities());

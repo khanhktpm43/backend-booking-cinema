@@ -40,7 +40,7 @@ public class MovieCastController {
             MovieCast newMovieCast= movieCastRepository.save(movieCast);
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<MovieCast>("",newMovieCast));
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<MovieCast>("movieCast does exist",null));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<MovieCast>("movieCast does exist or RoleCast invalid",null));
     }
 
     @DeleteMapping("/{id}")
