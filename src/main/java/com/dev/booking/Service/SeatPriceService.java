@@ -57,8 +57,7 @@ public class SeatPriceService {
         return new DetailResponse<>(seatPrice, createdBy, updatedBy);
     }
     public boolean isValid(SeatPrice seatPrice){
-       // if()
-        return true;
+        return seatPrice.isValid() && seatPriceRepository.isValid(seatPrice);
 
     }
 }

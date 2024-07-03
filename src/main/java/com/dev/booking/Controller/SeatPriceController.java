@@ -10,12 +10,15 @@ import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
 import com.dev.booking.Service.SeatPriceService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("api/v1/seat-price")
@@ -44,8 +47,59 @@ public class SeatPriceController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
     }
     @PostMapping("")
-    public ResponseEntity<ResponseObject<DetailResponse<SeatPrice>>> create(@RequestBody SeatPrice seatPrice){
-
-        return null;
+    public ResponseEntity<ResponseObject<DetailResponse<SeatPrice>>> create(@RequestBody SeatPrice seatPrice, HttpServletRequest request){
+        if(seatPriceService.isValid(seatPrice)){
+            Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
+            String username = (String) tokenAndUsername.get("username");
+            User userReq = userRepository.findByUserName(username).orElse(null);
+            if(userReq == null){
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+            }
+            seatPrice.setId(null);
+            seatPrice.setCreatedBy(userReq.getId());
+            seatPrice.setCreatedAt(LocalDateTime.now());
+            seatPrice.setUpdatedAt(null);
+            SeatPrice seatPrice1 = seatPriceRepository.save(seatPrice);
+            UserBasicDTO createdBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
+            DetailResponse<SeatPrice> response = new DetailResponse<>(seatPrice1, createdBy, null);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("invalid", null));
     }
+    @PutMapping("/{id}")
+    public ResponseEntity<ResponseObject<DetailResponse<SeatPrice>>> create(@PathVariable Long id,@RequestBody SeatPrice seatPrice, HttpServletRequest request){
+       if(seatPriceRepository.existsById(id) && seatPrice.isValid()){
+           Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
+           String username = (String) tokenAndUsername.get("username");
+           User userReq = userRepository.findByUserName(username).orElse(null);
+           if(userReq == null){
+               return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+           }
+           if(seatPriceRepository.checkDuplicateSeatPrice(seatPrice,id))
+               return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("duplicate", null));
+           SeatPrice seatPrice1 = seatPriceRepository.findById(id).orElse(null);
+           if(seatPrice1 != null){
+               seatPrice1.setPrice(seatPrice.getPrice());
+               seatPrice1.setSeatType(seatPrice.getSeatType());
+               seatPrice1.setStartDate(seatPrice.getStartDate());
+               seatPrice1.setEndDate(seatPrice.getEndDate());
+               seatPrice1.setNormalDay(seatPrice.isNormalDay());
+               seatPrice1.setWeekend(seatPrice.isWeekend());
+               seatPrice1.setSpecialDay(seatPrice.isSpecialDay());
+               seatPrice1.setUpdatedAt(LocalDateTime.now());
+               seatPrice1.setUpdatedBy(userReq.getId());
+               SeatPrice seatPrice2 =  seatPriceRepository.save(seatPrice1);
+               UserBasicDTO createdBy = null;
+               User user = userRepository.findById(seatPrice1.getCreatedBy()).orElse(null);
+               if(user != null)
+                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+               UserBasicDTO updatedBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
+               DetailResponse<SeatPrice> response = new DetailResponse<>(seatPrice2, createdBy, updatedBy);
+               return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
+           }
+
+       }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("id does not exist or dayType invalid", null));
+    }
+
 }

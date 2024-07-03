@@ -50,9 +50,12 @@ public class SeatPrice {
     private LocalDateTime updatedAt;
 
     // Getters and Setters
+    @JsonIgnore
     public boolean isValid(){
-//        if(seatType != null && normalDay != null,)
-        return true;
+        int intNormal = normalDay ? 1 : 0;
+        int intWeekend = weekend ? 1 : 0;
+        int intSpecial = specialDay ? 1 : 0;
+        return intSpecial + intNormal + intWeekend == 1;
     }
 }
 
