@@ -66,10 +66,7 @@ public class FoodService {
     }
 
     public DetailResponse<Food> create(HttpServletRequest request, Food food) {
-        Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-
-        String username = (String) tokenAndUsername.get("username");
-        User userReq = userRepository.findByUserName(username).orElse(null);
+        User userReq = jwtRequestFilter.getUserRequest(request);
         if(userReq == null){
             return null;
         }
@@ -86,9 +83,7 @@ public class FoodService {
     public DetailResponse<Food> update(Long id, HttpServletRequest request, Food food) {
         Food food1 = foodRepository.findById(id).orElse(null);
         if(food1 != null ){
-            Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-            String username = (String) tokenAndUsername.get("username");
-            User userReq = userRepository.findByUserName(username).orElse(null);
+            User userReq = jwtRequestFilter.getUserRequest(request);
             if(userReq == null){
                 return null;
             }

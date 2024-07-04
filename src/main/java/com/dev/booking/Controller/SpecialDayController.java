@@ -76,9 +76,10 @@ public class SpecialDayController {
         if (specialDayRepository.exists(example)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("Information already exists", null));
         }
-        Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-        String username = (String) tokenAndUsername.get("username");
-        User userReq = userRepository.findByUserName(username).orElseThrow();
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+        }
         specialDay.setId(null);
         specialDay.setCreatedBy(userReq.getId());
         specialDay.setCreatedAt(LocalDateTime.now());
@@ -93,9 +94,10 @@ public class SpecialDayController {
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SpecialDay>>> update(@PathVariable Long id,@RequestBody SpecialDay specialDay, HttpServletRequest request){
         if (specialDayRepository.existsById(id) ) {
-            Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-            String username = (String) tokenAndUsername.get("username");
-            User userReq = userRepository.findByUserName(username).orElseThrow();
+            User userReq = jwtRequestFilter.getUserRequest(request);
+            if(userReq == null){
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+            }
             SpecialDay day = specialDayRepository.findById(id).orElseThrow();
             day.setName(specialDay.getName());
             day.setStart(specialDay.getStart());

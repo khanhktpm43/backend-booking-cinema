@@ -38,9 +38,10 @@ public class UserRoleController {
 
     @PostMapping("/")
     public ResponseEntity<ResponseObject<UserDetailResponse>> assignRole(@RequestBody UserRoleRequest request , HttpServletRequest httpRequest){
-        Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(httpRequest);
-        String username = (String) tokenAndUsername.get("username");
-        User userReq = userRepository.findByUserName(username).orElseThrow();
+        User userReq = jwtRequestFilter.getUserRequest(httpRequest);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+        }
         List<Role> roles = new ArrayList<>();
         Example<User> userExample = Example.of(request.getUser());
         for (Role role : request.getRoles()) {

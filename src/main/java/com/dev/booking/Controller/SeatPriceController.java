@@ -49,9 +49,8 @@ public class SeatPriceController {
     @PostMapping("")
     public ResponseEntity<ResponseObject<DetailResponse<SeatPrice>>> create(@RequestBody SeatPrice seatPrice, HttpServletRequest request){
         if(seatPriceService.isValid(seatPrice)){
-            Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-            String username = (String) tokenAndUsername.get("username");
-            User userReq = userRepository.findByUserName(username).orElse(null);
+
+            User userReq = jwtRequestFilter.getUserRequest(request);
             if(userReq == null){
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
             }
@@ -69,9 +68,7 @@ public class SeatPriceController {
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SeatPrice>>> create(@PathVariable Long id,@RequestBody SeatPrice seatPrice, HttpServletRequest request){
        if(seatPriceRepository.existsById(id) && seatPrice.isValid()){
-           Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-           String username = (String) tokenAndUsername.get("username");
-           User userReq = userRepository.findByUserName(username).orElse(null);
+           User userReq = jwtRequestFilter.getUserRequest(request);
            if(userReq == null){
                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
            }
@@ -102,4 +99,15 @@ public class SeatPriceController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("id does not exist or dayType invalid", null));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseObject<DetailResponse<SeatPrice>>> delete(@PathVariable Long id){
+        if(seatPriceRepository.existsById(id)){
+            SeatPrice seatPrice = seatPriceRepository.findById(id).orElse(null);
+            if(seatPrice != null && LocalDateTime.now().isAfter(seatPrice.getStartDate()))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("Cannot delete expired price", null));
+            seatPriceRepository.deleteById(id);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", null));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
+    }
 }

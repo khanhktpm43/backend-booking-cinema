@@ -1,9 +1,19 @@
 package com.dev.booking.Controller;
 
+import com.dev.booking.Entity.Movie;
 import com.dev.booking.Entity.MovieCast;
 import com.dev.booking.Entity.MovieGenre;
+import com.dev.booking.Entity.User;
+import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.MovieCastRepository;
+import com.dev.booking.Repository.MovieRepository;
+import com.dev.booking.Repository.UserRepository;
+import com.dev.booking.RequestDTO.MovieCastDTO;
+import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
+import com.dev.booking.ResponseDTO.UserBasicDTO;
+import com.dev.booking.Service.MovieCastService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.http.HttpStatus;
@@ -17,38 +27,85 @@ import java.util.List;
 public class MovieCastController {
     @Autowired
     private MovieCastRepository movieCastRepository;
+    @Autowired
+    private MovieCastService movieCastService;
+    @Autowired
+    private JwtRequestFilter jwtRequestFilter;
+    @Autowired
+    private MovieRepository movieRepository;
+    @Autowired
+    private UserRepository userRepository;
+
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject<List<MovieCast>>> getAll(){
+    public ResponseEntity<ResponseObject<List<DetailResponse<MovieCast>>>> getAll(){
         List<MovieCast> movieCasts = movieCastRepository.findAll();
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<List<MovieCast>>("",movieCasts));
+        List<DetailResponse<MovieCast>> responses = movieCastService.mapMovieCastToResponse(movieCasts);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
+    }
+    @GetMapping("/movie")
+    public ResponseEntity<ResponseObject<List<DetailResponse<MovieCast>>>> getByMovie(@RequestBody Movie movie){
+        if(movie.getId() == null || !movieRepository.existsById(movie.getId()))
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("movieId does not exist",null));
+        List<MovieCast> movieCasts = movieCastRepository.findByMovie(movie);
+        List<DetailResponse<MovieCast>> responses = movieCastService.mapMovieCastToResponse(movieCasts);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseObject<MovieCast>> getById(@PathVariable Long id){
+    public ResponseEntity<ResponseObject<DetailResponse<MovieCast>>> getById(@PathVariable Long id){
         if(movieCastRepository.existsById(id)){
             MovieCast movieCast = movieCastRepository.findById(id).orElse(null);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<MovieCast>("",movieCast));
+            UserBasicDTO createdBy = null;
+            UserBasicDTO updatedBy = null;
+            if(movieCast != null && movieCast.getCreatedBy() != null){
+                User user = userRepository.findById(movieCast.getCreatedBy()).orElse(null);
+                if(user != null)
+                    createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+            }
+            if(movieCast != null && movieCast.getUpdatedBy() != null){
+                User user = userRepository.findById(movieCast.getUpdatedBy()).orElse(null);
+                if(user != null)
+                    updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+            }
+            DetailResponse<MovieCast> response = new DetailResponse<>(movieCast, createdBy, updatedBy);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
     }
     @PostMapping("")
-    public  ResponseEntity<ResponseObject<MovieCast>> create(@RequestBody MovieCast movieCast){
+    public  ResponseEntity<ResponseObject<DetailResponse<Movie>>> create(@RequestBody MovieCastDTO movieCastDTO, HttpServletRequest request){
 
-        Example<MovieCast> example = Example.of(movieCast);
-        if(!movieCastRepository.exists(example) && (movieCast.getRoleCast() == 1 || movieCast.getRoleCast() == 2 || movieCast.getRoleCast() == 3)){
-            movieCast.setId(null);
-            MovieCast newMovieCast= movieCastRepository.save(movieCast);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<MovieCast>("",newMovieCast));
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<MovieCast>("movieCast does exist or RoleCast invalid",null));
+        DetailResponse<Movie> response = movieCastService.attachCasts(request,movieCastDTO);
+        if(response == null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("movie does not exist or genres is empty or not authenticated or roleCast invalid",null));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("",response));
+    }
+    @PutMapping("/{id}")
+    public  ResponseEntity<ResponseObject<DetailResponse<MovieCast>>> update(@PathVariable Long id, @RequestBody MovieCast movieCast, HttpServletRequest request){
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("not authenticated",null));
+        if(!movieCastRepository.existsById(id))
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+        DetailResponse<MovieCast> response= movieCastService.update(userReq,id,movieCast);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseObject<MovieCast>> delete(@PathVariable Long id){
         if(movieCastRepository.existsById(id)){
             movieCastRepository.deleteById(id);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<MovieCast>("",null) );
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",null) );
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<MovieCast>("id does not exist",null) );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null) );
+    }
+    @DeleteMapping("/movie")
+    public ResponseEntity<ResponseObject<MovieGenre>> deleteByMovie(@RequestBody Movie movie){
+        if(movieRepository.existsById(movie.getId())){
+            movieCastRepository.deleteByMovie(movie);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<MovieGenre>("",null) );
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<MovieGenre>("movie does not exist",null) );
     }
 }

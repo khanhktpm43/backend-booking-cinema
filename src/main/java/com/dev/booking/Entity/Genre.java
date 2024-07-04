@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,7 +25,17 @@ public class Genre {
 
     @Column(nullable = false)
     private String name;
+    @JsonIgnore
+    private Long createdBy;
 
+    @JsonIgnore
+    private Long updatedBy;
+
+    @Column(nullable = true)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = true)
+    private LocalDateTime updatedAt;
 
    //@JsonBackReference("movie-genres-genres")
    @JsonIgnore

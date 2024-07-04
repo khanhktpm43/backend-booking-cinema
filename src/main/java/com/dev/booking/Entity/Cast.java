@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 @Data
@@ -23,6 +24,17 @@ public class Cast {
     @Column(nullable = false)
     private String name;
 
+    @JsonIgnore
+    private Long createdBy;
+
+    @JsonIgnore
+    private Long updatedBy;
+
+    @Column(nullable = true)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = true)
+    private LocalDateTime updatedAt;
     @OneToMany(mappedBy = "cast", cascade = CascadeType.ALL, orphanRemoval = true)
  //  @JsonBackReference("movie-casts-casts")
 //@JsonIgnoreProperties

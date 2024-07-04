@@ -90,9 +90,10 @@ public class MovieController {
                                                         @RequestParam("image") MultipartFile image,
                                                         @RequestParam("trailer") MultipartFile trailer,
                                                         HttpServletRequest request) {
-        Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-        String username = (String) tokenAndUsername.get("username");
-        User userReq = userRepository.findByUserName(username).orElse(null);
+//        Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
+//        String username = (String) tokenAndUsername.get("username");
+//        User userReq = userRepository.findByUserName(username).orElse(null);
+        User userReq = jwtRequestFilter.getUserRequest(request);
         if(userReq == null){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
         }
@@ -130,9 +131,10 @@ public class MovieController {
                                                         HttpServletRequest request) {
         if (movieRepository.existsById(id)) {
             try {
-                Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-                String username = (String) tokenAndUsername.get("username");
-                User userReq = userRepository.findByUserName(username).orElse(null);
+//                Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
+//                String username = (String) tokenAndUsername.get("username");
+//                User userReq = userRepository.findByUserName(username).orElse(null);
+                User userReq = jwtRequestFilter.getUserRequest(request);
                 if(userReq == null){
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
                 }

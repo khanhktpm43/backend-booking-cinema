@@ -1,5 +1,7 @@
 package com.dev.booking.JWT;
 
+import com.dev.booking.Entity.User;
+import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.Service.MyUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -8,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -25,6 +28,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private UserRepository userRepository;
 
 
     @Override
@@ -63,5 +68,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         response.put("accessToken", accessToken);
         response.put("username", username);
         return response ;
+    }
+
+    public User getUserRequest(HttpServletRequest request){
+        Map<String, String> tokenAndUsername = getTokenAndUsernameFromRequest(request);
+        String username = (String) tokenAndUsername.get("username");
+        return userRepository.findByUserName(username).orElse(null);
     }
 }

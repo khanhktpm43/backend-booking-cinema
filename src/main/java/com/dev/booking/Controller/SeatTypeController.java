@@ -80,9 +80,7 @@ public class SeatTypeController {
         if (seatTypeRepository.exists(example)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("Information already exists", null));
         }
-        Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-        String username = (String) tokenAndUsername.get("username");
-        User userReq = userRepository.findByUserName(username).orElse(null);
+        User userReq = jwtRequestFilter.getUserRequest(request);
         if(userReq == null){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
         }
@@ -99,9 +97,7 @@ public class SeatTypeController {
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> update(@PathVariable Long id,@RequestBody SeatType seatType, HttpServletRequest request){
         if (seatTypeRepository.existsById(id)) {
-            Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-            String username = (String) tokenAndUsername.get("username");
-            User userReq = userRepository.findByUserName(username).orElse(null);
+            User userReq = jwtRequestFilter.getUserRequest(request);
             if(userReq == null){
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
             }

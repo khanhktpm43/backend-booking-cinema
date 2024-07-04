@@ -1,9 +1,19 @@
 package com.dev.booking.Controller;
 
+import com.dev.booking.Entity.Movie;
 import com.dev.booking.Entity.MovieGenre;
+import com.dev.booking.Entity.User;
+import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.MovieGenreRepository;
+import com.dev.booking.Repository.MovieRepository;
+import com.dev.booking.Repository.UserRepository;
+import com.dev.booking.RequestDTO.MovieGenreDTO;
+import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 
+import com.dev.booking.ResponseDTO.UserBasicDTO;
+import com.dev.booking.Service.MovieGenreService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.http.HttpStatus;
@@ -17,31 +27,69 @@ import java.util.List;
 public class MovieGenreController {
     @Autowired
     private MovieGenreRepository movieGenreRepository;
+    @Autowired
+    private MovieGenreService movieGenreService;
+    @Autowired
+    private JwtRequestFilter jwtRequestFilter;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private MovieRepository movieRepository;
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject<List<MovieGenre>>> getAll(){
+    public ResponseEntity<ResponseObject<List<DetailResponse<MovieGenre>>>> getAll(){
         List<MovieGenre> movieGenres = movieGenreRepository.findAll();
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<List<MovieGenre>>("",movieGenres));
+        List<DetailResponse<MovieGenre>> responses = movieGenreService.mapMovieGenreToResponse(movieGenres);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
+    }
+    @GetMapping("/movie")
+    public ResponseEntity<ResponseObject<List<DetailResponse<MovieGenre>>>> getAll(@RequestBody Movie movie){
+        if(movie.getId() == null || !movieRepository.existsById(movie.getId()))
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("movieId does not exist",null));
+        List<MovieGenre> movieGenres = movieGenreRepository.findByMovie(movie);
+        List<DetailResponse<MovieGenre>> responses = movieGenreService.mapMovieGenreToResponse(movieGenres);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseObject<MovieGenre>> getById(@PathVariable Long id){
+    public ResponseEntity<ResponseObject<DetailResponse<MovieGenre>>> getById(@PathVariable Long id){
         if(movieGenreRepository.existsById(id)){
             MovieGenre movieGenre = movieGenreRepository.findById(id).orElse(null);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<MovieGenre>("",movieGenre));
+            UserBasicDTO createdBy = null;
+            UserBasicDTO updatedBy = null;
+            if(movieGenre != null && movieGenre.getCreatedBy() != null){
+                User user = userRepository.findById(movieGenre.getCreatedBy()).orElse(null);
+                if(user != null)
+                    createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+            }
+            if(movieGenre != null && movieGenre.getUpdatedBy() != null){
+                User user = userRepository.findById(movieGenre.getUpdatedBy()).orElse(null);
+                if(user != null)
+                    updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+            }
+            DetailResponse<MovieGenre> response = new DetailResponse<>(movieGenre, createdBy, updatedBy);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
     }
     @PostMapping("")
-    public  ResponseEntity<ResponseObject<MovieGenre>> create(@RequestBody MovieGenre movieGenre){
+    public  ResponseEntity<ResponseObject<DetailResponse<Movie>>> create(@RequestBody MovieGenreDTO movieGenreDTO, HttpServletRequest request){
+        DetailResponse<Movie> response = movieGenreService.attachGenres(request,movieGenreDTO);
+        if(response == null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("movie does not exist or genres is empty or not authenticated",null));
 
-        Example<MovieGenre> example = Example.of(movieGenre);
-        if(!movieGenreRepository.exists(example)){
-            movieGenre.setId(null);
-            MovieGenre newMovieGenre = movieGenreRepository.save(movieGenre);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<MovieGenre>("",newMovieGenre));
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<MovieGenre>("movieGenre does exist",null));
+       return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("",response));
     }
+    @PutMapping("/{id}")
+    public  ResponseEntity<ResponseObject<DetailResponse<MovieGenre>>> update(@PathVariable Long id, @RequestBody MovieGenre movieGenre, HttpServletRequest request){
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("not authenticated",null));
+        if(!movieGenreRepository.existsById(id))
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+        DetailResponse<MovieGenre> response= movieGenreService.update(userReq,id,movieGenre);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
+    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseObject<MovieGenre>> delete(@PathVariable Long id){
@@ -50,5 +98,13 @@ public class MovieGenreController {
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<MovieGenre>("",null) );
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<MovieGenre>("id does not exist",null) );
+    }
+    @DeleteMapping("/movie")
+    public ResponseEntity<ResponseObject<MovieGenre>> deleteByMovie(@RequestBody Movie movie){
+        if(movieRepository.existsById(movie.getId())){
+            movieGenreRepository.deleteByMovie(movie);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<MovieGenre>("",null) );
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<MovieGenre>("movie does not exist",null) );
     }
 }

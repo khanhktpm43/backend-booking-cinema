@@ -81,13 +81,9 @@ public class UserService {
 
     }
     @Transactional
-    public UserDetailResponse create( HttpServletRequest httpRequest,CreateUserRequest createUserRequest) {
+    public UserDetailResponse create( HttpServletRequest request,CreateUserRequest createUserRequest) {
         try {
-            Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(httpRequest);
-
-            String username = (String) tokenAndUsername.get("username");
-            User userReq = userRepository.findByUserName(username).orElse(null);
-
+            User userReq = jwtRequestFilter.getUserRequest(request);
             List<Role> roles = new ArrayList<>();
             User user = new User(createUserRequest.getUser().getName(), createUserRequest.getUser().getUserName(), createUserRequest.getUser().getEmail(), createUserRequest.getUser().getPhone(),passwordEncoder.encode(createUserRequest.getUser().getPassWord()));
             user.setCreatedAt(LocalDateTime.now());

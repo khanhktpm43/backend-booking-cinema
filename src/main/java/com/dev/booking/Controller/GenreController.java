@@ -2,14 +2,22 @@ package com.dev.booking.Controller;
 
 import com.dev.booking.Entity.Cast;
 import com.dev.booking.Entity.Genre;
+import com.dev.booking.Entity.User;
+import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.GenreRepository;
+import com.dev.booking.Repository.UserRepository;
+import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
+import com.dev.booking.ResponseDTO.UserBasicDTO;
+import com.dev.booking.Service.GenreService;
 import io.swagger.v3.oas.models.examples.Example;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -18,48 +26,91 @@ import java.util.List;
 public class GenreController {
     @Autowired
     private GenreRepository genreRepository;
+    @Autowired
+    private GenreService genreService;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private JwtRequestFilter jwtRequestFilter;
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject<List<Genre>>> getAll(){
+    public ResponseEntity<ResponseObject<List<DetailResponse<Genre>>>> getAll(){
         List<Genre> genres = genreRepository.findAll();
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<List<Genre>>("",genres));
+        List<DetailResponse<Genre>> responses = genreService.mapGenreToResponse(genres);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseObject<Genre>> getById(@PathVariable Long id){
+    public ResponseEntity<ResponseObject<DetailResponse<Genre>>> getById(@PathVariable Long id){
 
             Genre genre = genreRepository.findById(id).orElse(null);
        if(genre != null){
-           return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<Genre>("",genre));
+           UserBasicDTO createdBy = null;
+           UserBasicDTO updatedBy = null;
+           if(genre.getCreatedBy() != null){
+               User user = userRepository.findById(genre.getCreatedBy()).orElse(null);
+               if(user != null)
+                   createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+           }
+           if(genre.getUpdatedBy() != null){
+               User user = userRepository.findById(genre.getUpdatedBy()).orElse(null);
+               if(user != null)
+                   updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+           }
+           DetailResponse<Genre> response = new DetailResponse<>(genre, createdBy, updatedBy);
+           return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
        }
-       return  ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<Genre>("id does not exist",genre));
+       return  ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
     }
 
     @PostMapping("")
-    public  ResponseEntity<ResponseObject<Genre>> create(@RequestBody Genre genre){
-
-        if(genreRepository.existsByName(genre.getName())){
-            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<Genre>("genre name does  exist",genre));
+    public  ResponseEntity<ResponseObject<DetailResponse<Genre>>> create(@RequestBody Genre genre, HttpServletRequest request){
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
         }
+        if(genreRepository.existsByName(genre.getName())){
+            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("genre name does  exist",null));
+        }
+        genre.setId(null);
+        genre.setCreatedAt(LocalDateTime.now());
+        genre.setCreatedBy(userReq.getId());
+        genre.setUpdatedAt(null);
         Genre newGenre = genreRepository.save(genre);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<Genre>("",newGenre));
+        UserBasicDTO createdBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
+        DetailResponse<Genre> response = new DetailResponse<>(newGenre, createdBy, null);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("",response));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseObject<Genre>> update(@PathVariable Long id, @RequestBody Genre genre){
-        if(genreRepository.existsById(id)){
-            genre.setId(id);
-            genreRepository.save(genre);
-            return ResponseEntity.status(HttpStatus.OK ).body(new ResponseObject<Genre>("",genre));
+    public ResponseEntity<ResponseObject<DetailResponse<Genre>>> update(@PathVariable Long id, @RequestBody Genre genre,HttpServletRequest request){
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<Genre>("id does not exist",null));
+        if(genreRepository.existsById(id)){
+            Genre genre1 = genreRepository.findById(id).orElse(null);
+            genre1.setName(genre.getName());
+            genre1.setUpdatedAt(LocalDateTime.now());
+            genre1.setUpdatedBy(userReq.getId());
+            Genre genre2 =  genreRepository.save(genre1);
+            UserBasicDTO createdBy = null;
+            if(userRepository.existsById(genre1.getCreatedBy())){
+                User user = userRepository.findById(genre1.getCreatedBy()).orElse(null);
+                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+            }
+            UserBasicDTO updatedBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
+            DetailResponse<Genre> response = new DetailResponse<>(genre2, createdBy, updatedBy);
+            return ResponseEntity.status(HttpStatus.OK ).body(new ResponseObject<>("",response));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
     }
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseObject<Genre>> delete(@PathVariable Long id){
+    public ResponseEntity<ResponseObject<DetailResponse<Genre>>> delete(@PathVariable Long id){
         if(genreRepository.existsById(id)){
             genreRepository.deleteById(id);
-            return ResponseEntity.status(HttpStatus.OK ).body(new ResponseObject<Genre>("",null));
+            return ResponseEntity.status(HttpStatus.OK ).body(new ResponseObject<>("",null));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<Genre>("id does not exist",null));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
     }
 }
