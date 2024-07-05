@@ -24,7 +24,6 @@ public class MovieService {
 
     public MovieResponse getById(Long id) {
         List<Object[]> results = movieRepository.findDetailById(id);
-
         if (!results.isEmpty()) {
             Object[] result = results.get(0); // Chỉ lấy một kết quả đầu tiên
             Long movieId = (Long) result[0];
@@ -35,7 +34,7 @@ public class MovieService {
             Timestamp releaseTimestamp = (Timestamp) result[5];
             LocalDateTime release = convertTimestampToLocalDateTime(releaseTimestamp);
           //  LocalDateTime release =null ;// (LocalDateTime) result[5];
-            byte[] trailer = (byte[]) result[6];
+            String trailer = (String) result[6];
             //LocalDateTime createdAt =null;// (LocalDateTime) result[7];
             Timestamp createdAtTimestamp = (Timestamp) result[7];
             LocalDateTime createdAt = convertTimestampToLocalDateTime(createdAtTimestamp);

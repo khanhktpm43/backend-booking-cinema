@@ -88,7 +88,7 @@ public class MovieController {
                                                         @RequestParam("overview") String overview,
                                                         @RequestParam("duration") int duration,
                                                         @RequestParam("image") MultipartFile image,
-                                                        @RequestParam("trailer") MultipartFile trailer,
+                                                        @RequestParam("trailer") String trailer,
                                                         HttpServletRequest request) {
 //        Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
 //        String username = (String) tokenAndUsername.get("username");
@@ -104,7 +104,7 @@ public class MovieController {
             movie.setOverview(overview);
             movie.setDuration(duration);
             movie.setImage(image.getBytes());
-            movie.setTrailer(trailer.getBytes());
+            movie.setTrailer(trailer);
             movie.setCreatedAt(LocalDateTime.now());
             movie.setCreatedBy(userReq.getId());
             movie.setUpdatedAt(null);
@@ -127,7 +127,7 @@ public class MovieController {
                                                  @RequestParam("overview") String overview,
                                                  @RequestParam("duration") int duration,
                                                  @RequestParam("image") MultipartFile image,
-                                                 @RequestParam("trailer") MultipartFile trailer,
+                                                 @RequestParam("trailer") String trailer,
                                                         HttpServletRequest request) {
         if (movieRepository.existsById(id)) {
             try {
@@ -145,7 +145,7 @@ public class MovieController {
                 movie.setOverview(overview);
                 movie.setDuration(duration);
                 movie.setImage(image.getBytes());
-                movie.setTrailer(trailer.getBytes());
+                movie.setTrailer(trailer);
                 movie.setUpdatedAt(LocalDateTime.now());
                 movie.setUpdatedBy(userReq.getId());
                 Movie newMovie = movieRepository.save(movie);
@@ -157,7 +157,6 @@ public class MovieController {
             } catch (IOException e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject<>("Could not update movie",null));
             }
-
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
     }

@@ -28,12 +28,12 @@ public class Movie {
     private byte[] image;
 
     @Lob
-
+    @Column(columnDefinition = "LONGBLOB")
     private String overview;
 
     @Lob
     @Column(columnDefinition = "LONGBLOB")
-    private byte[] trailer;
+    private String trailer;
 
     @Column(nullable = false)
     private int duration;
@@ -63,7 +63,7 @@ public class Movie {
     //@JsonBackReference("movie-showtimes")
     private Set<Showtime> showtimes;
 
-    public Movie(Long movieId, String movieName, LocalDateTime release, byte[] image, String overview, byte[] trailer, Integer duration, LocalDateTime createdAt, Long createdBy, LocalDateTime updatedAt, Long updatedBy) {
+    public Movie(Long movieId, String movieName, LocalDateTime release, byte[] image, String overview, String trailer, Integer duration, LocalDateTime createdAt, Long createdBy, LocalDateTime updatedAt, Long updatedBy) {
         this.id = movieId;
         this.name = movieName;
         this.releaseDate = release;
