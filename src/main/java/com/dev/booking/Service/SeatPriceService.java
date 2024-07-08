@@ -23,7 +23,7 @@ public class SeatPriceService {
 
 
     public List<DetailResponse<SeatPrice>> mapToResponse(List<SeatPrice> seatPrices){
-        List<DetailResponse<SeatPrice>> result = seatPrices.stream().map(seatPrice -> {
+        return seatPrices.stream().map(seatPrice -> {
             UserBasicDTO createdBy = null;
             if (seatPrice.getCreatedBy() != null) {
                 User user = userRepository.findById(seatPrice.getCreatedBy()).orElse(null);
@@ -36,7 +36,6 @@ public class SeatPriceService {
             }
             return new DetailResponse<>(seatPrice, createdBy, updatedBy);
         }).collect(Collectors.toList());
-        return result;
     }
     public DetailResponse<SeatPrice> getById(Long id){
         SeatPrice seatPrice = seatPriceRepository.findById(id).orElse(null);

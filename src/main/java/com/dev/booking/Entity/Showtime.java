@@ -38,6 +38,17 @@ public class Showtime {
     @JoinColumn(name = "roomID")
    // @JsonManagedReference("room-showtimes")
     private Room room;
+    @JsonIgnore
+    private Long createdBy;
+
+    @JsonIgnore
+    private Long updatedBy;
+
+    @Column(nullable = true)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = true)
+    private LocalDateTime updatedAt;
 
     @JsonIgnore
     @OneToMany(mappedBy = "showtime", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -27,6 +27,7 @@ public class SeatPrice {
     private boolean normalDay;
     private boolean weekend;
     private boolean specialDay;
+    private boolean earlyShow;
 
     @Column(nullable = false)
     private LocalDateTime startDate;
@@ -55,7 +56,8 @@ public class SeatPrice {
         int intNormal = normalDay ? 1 : 0;
         int intWeekend = weekend ? 1 : 0;
         int intSpecial = specialDay ? 1 : 0;
-        return intSpecial + intNormal + intWeekend == 1;
+        int intEarly = earlyShow ? 1 : 0;
+        return intSpecial + intNormal + intWeekend + intEarly == 1;
     }
 }
 

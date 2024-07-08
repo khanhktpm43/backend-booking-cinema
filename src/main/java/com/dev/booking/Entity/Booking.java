@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Set;
 
@@ -32,6 +33,17 @@ public class Booking {
 
     @Column(nullable = false)
     private float totalPrice;
+    @JsonIgnore
+    private Long createdBy;
+
+    @JsonIgnore
+    private Long updatedBy;
+
+    @Column(nullable = true)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = true)
+    private LocalDateTime updatedAt;
 @JsonIgnore
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
   //  @JsonBackReference("booking-tickets")

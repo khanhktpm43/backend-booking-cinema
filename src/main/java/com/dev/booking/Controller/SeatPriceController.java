@@ -49,7 +49,6 @@ public class SeatPriceController {
     @PostMapping("")
     public ResponseEntity<ResponseObject<DetailResponse<SeatPrice>>> create(@RequestBody SeatPrice seatPrice, HttpServletRequest request){
         if(seatPriceService.isValid(seatPrice)){
-
             User userReq = jwtRequestFilter.getUserRequest(request);
             if(userReq == null){
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
@@ -66,7 +65,7 @@ public class SeatPriceController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("invalid", null));
     }
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseObject<DetailResponse<SeatPrice>>> create(@PathVariable Long id,@RequestBody SeatPrice seatPrice, HttpServletRequest request){
+    public ResponseEntity<ResponseObject<DetailResponse<SeatPrice>>> update(@PathVariable Long id,@RequestBody SeatPrice seatPrice, HttpServletRequest request){
        if(seatPriceRepository.existsById(id) && seatPrice.isValid()){
            User userReq = jwtRequestFilter.getUserRequest(request);
            if(userReq == null){
@@ -80,6 +79,7 @@ public class SeatPriceController {
                seatPrice1.setSeatType(seatPrice.getSeatType());
                seatPrice1.setStartDate(seatPrice.getStartDate());
                seatPrice1.setEndDate(seatPrice.getEndDate());
+               seatPrice1.setEarlyShow(seatPrice.isEarlyShow());
                seatPrice1.setNormalDay(seatPrice.isNormalDay());
                seatPrice1.setWeekend(seatPrice.isWeekend());
                seatPrice1.setSpecialDay(seatPrice.isSpecialDay());

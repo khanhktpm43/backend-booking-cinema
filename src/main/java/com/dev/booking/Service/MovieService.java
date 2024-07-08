@@ -61,22 +61,18 @@ public class MovieService {
                 Long castId = (Long) obj[13];
                 String castName = (String) obj[14];
                 Integer roleCast = (Integer) obj[15];
-
                 Genre genre = new Genre();
                 genre.setId(genreId);
                 genre.setName(genreName);
                 genres.add(genre);
-
                 Cast cast = new Cast();
                 cast.setId(castId);
                 cast.setName(castName);
-
                 CastDTO castDTO = new CastDTO();
                 castDTO.setCast(cast);
                 castDTO.setRoleCast(roleCast);
                 casts.add(castDTO);
             }
-
             MovieResponse movieResponse = new MovieResponse();
             movieResponse.setMovie(movie);
             movieResponse.setGenres(genres);

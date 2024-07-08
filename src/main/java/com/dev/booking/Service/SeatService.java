@@ -18,8 +18,6 @@ import java.util.stream.Collectors;
 public class SeatService {
     @Autowired
     private UserRepository userRepository;
-
-
     public List<DetailResponse<Seat>> mapSeatToSeatResponse(List<Seat> seats){
         List<DetailResponse<Seat>> result = seats.stream().map(seat -> {
             UserBasicDTO createdBy = null;

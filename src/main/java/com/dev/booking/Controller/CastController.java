@@ -64,8 +64,6 @@ public class CastController {
         User userReq = jwtRequestFilter.getUserRequest(request);
         if (userReq == null)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
-
-        //  if(!castRepository.existsByName(cast.getName())){
         cast.setId(null);
         cast.setCreatedAt(LocalDateTime.now());
         cast.setCreatedBy(userReq.getId());
