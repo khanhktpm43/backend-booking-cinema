@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface MovieRepository extends JpaRepository<Movie, Long> {
 
-    @Query(value = "SELECT m.*, g.id as g_id, g.name as g_name , c.id as c_id, c.name as c_name, mc.role_cast " +
+    @Query(value = "SELECT m.id, m.duration, m.image, m.name, m.overview, m.release_date, m.trailer, m.created_at, m.created_by, m.updated_at, m.updated_by , g.id as g_id, g.name as g_name , c.id as c_id, c.name as c_name, mc.role_cast " +
             "FROM movie m " +
             "LEFT JOIN movie_genre mg ON m.id = mg.movie_id " +
             "LEFT JOIN genre g ON mg.genre_id = g.id\n" +

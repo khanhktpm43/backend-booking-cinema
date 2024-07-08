@@ -8,14 +8,17 @@ import com.dev.booking.Repository.ShowtimeRepository;
 import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
+import com.dev.booking.ResponseDTO.ShowtimeResponse;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
 import com.dev.booking.Service.ShowtimeService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -37,13 +40,18 @@ public class ShowtimeController {
         List<DetailResponse<Showtime>> responses = showtimeService.mapToResponse(showtimes);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
-    @GetMapping("{id}")
-    public ResponseEntity<ResponseObject<DetailResponse<Showtime>>> getById(@PathVariable Long id){
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseObject<DetailResponse<Showtime>>>  getById(@PathVariable Long id){
         if(showtimeRepository.existsById(id)){
             DetailResponse<Showtime> response = showtimeService.getById(id);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+    }
+    @GetMapping("/date")
+    public ResponseEntity<ResponseObject<List<ShowtimeResponse>>>  getById( @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date){
+        List<ShowtimeResponse> responses = showtimeService.getShowtimesByDate(date);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
     @PostMapping("")
     public ResponseEntity<ResponseObject<DetailResponse<Showtime>>> create(@RequestBody Showtime showtime, HttpServletRequest request){

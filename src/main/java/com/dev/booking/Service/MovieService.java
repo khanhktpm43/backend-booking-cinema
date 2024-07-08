@@ -11,11 +11,10 @@ import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class MovieService {
@@ -30,32 +29,19 @@ public class MovieService {
             Integer duration = (Integer) result[1];
             byte[] image = (byte[]) result[2];
             String movieName= (String) result[3];
-            String overview = (String) result[4];
-            Timestamp releaseTimestamp = (Timestamp) result[5];
-            LocalDateTime release = convertTimestampToLocalDateTime(releaseTimestamp);
-          //  LocalDateTime release =null ;// (LocalDateTime) result[5];
-            String trailer = (String) result[6];
-            //LocalDateTime createdAt =null;// (LocalDateTime) result[7];
-            Timestamp createdAtTimestamp = (Timestamp) result[7];
-            LocalDateTime createdAt = convertTimestampToLocalDateTime(createdAtTimestamp);
+            byte[] blobData = (byte[]) result[4];
+            String overview = new String(blobData, StandardCharsets.UTF_8);
+            LocalDateTime release =  convertTimestampToLocalDateTime((Timestamp) result[5]);
+            byte[] blobTrailer = (byte[]) result[6];
+            String trailer = new String(blobTrailer, StandardCharsets.UTF_8);
+            LocalDateTime createdAt =  convertTimestampToLocalDateTime((Timestamp) result[7]);
             Long createdBy = (Long) result[8];
-           // LocalDateTime updatedAt =null;// (LocalDateTime) result[9];
-            Timestamp updatedAtTimestamp = (Timestamp) result[9];
-            LocalDateTime updatedAt = convertTimestampToLocalDateTime(updatedAtTimestamp);
+            LocalDateTime updatedAt =  convertTimestampToLocalDateTime((Timestamp) result[9]);
             Long updatedBy = (Long) result[10];
             Movie movie = new Movie(movieId,movieName,release,image,overview,trailer,duration,createdAt, createdBy, updatedAt, updatedBy);
-
             List<Genre> genres = new ArrayList<>();
             List<CastDTO> casts = new ArrayList<>();
-
             for (Object[] obj : results) {
-//                Long movieId = (Long) obj[0];
-//                Integer duration = (Integer) obj[1];
-//                byte[] image = (byte[]) obj[2];
-//                String movieName= (String) obj[3];
-//                String overview = (String) obj[4];
-//                Date release = (Date) obj[5];
-//                byte[] trailer = (byte[]) obj[6];
                 Long genreId = (Long) obj[11];
                 String genreName = (String) obj[12];
                 Long castId = (Long) obj[13];
@@ -65,25 +51,30 @@ public class MovieService {
                 genre.setId(genreId);
                 genre.setName(genreName);
                 genres.add(genre);
-                Cast cast = new Cast();
-                cast.setId(castId);
-                cast.setName(castName);
+
                 CastDTO castDTO = new CastDTO();
-                castDTO.setCast(cast);
+                castDTO.setId(castId);
+                castDTO.setName(castName);
                 castDTO.setRoleCast(roleCast);
                 casts.add(castDTO);
             }
             MovieResponse movieResponse = new MovieResponse();
             movieResponse.setMovie(movie);
-            movieResponse.setGenres(genres);
-            movieResponse.setCasts(casts);
+
+            movieResponse.setGenres(new LinkedHashSet<>(genres).stream().toList());
+
+            movieResponse.setCasts(new LinkedHashSet<>(casts).stream().toList());
 
             return movieResponse;
         }
         return null;
     }
-    private LocalDateTime convertTimestampToLocalDateTime(Timestamp timestamp) {
-        return timestamp != null ? timestamp.toLocalDateTime() : null;
-    }
 
+
+    private LocalDateTime convertTimestampToLocalDateTime(Timestamp timestamp) {
+        if (timestamp != null) {
+            return timestamp.toLocalDateTime();
+        }
+        return null;
+    }
 }

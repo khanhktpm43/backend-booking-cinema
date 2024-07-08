@@ -11,18 +11,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfig {
-//    @Bean
-//    public OpenAPI customOpenAPI() {
-//        return new OpenAPI()
-//                .openapi("3.0.0") // Thêm phiên bản OpenAPI cụ thể
-//                .info(new Info()
-//                        .title("API Documentation")
-//                        .version("1.0")
-//                        .description("API Documentation for My Application")
-//                        .license(new License().name("Apache 2.0").url("http://springdoc.org")))
-//                .addSecurityItem(new SecurityRequirement().addList("Authorization"));
-//
-//    }
+
 @Bean
 public OpenAPI customOpenAPI() {
     return new OpenAPI()

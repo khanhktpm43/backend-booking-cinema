@@ -43,7 +43,7 @@ public class MovieCastController {
         List<DetailResponse<MovieCast>> responses = movieCastService.mapMovieCastToResponse(movieCasts);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
-    @GetMapping("/movie")
+    @PostMapping("/movie")
     public ResponseEntity<ResponseObject<List<DetailResponse<MovieCast>>>> getByMovie(@RequestBody Movie movie){
         if(movie.getId() == null || !movieRepository.existsById(movie.getId()))
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("movieId does not exist",null));

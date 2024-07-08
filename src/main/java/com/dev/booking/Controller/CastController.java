@@ -72,8 +72,7 @@ public class CastController {
         UserBasicDTO createdBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
         DetailResponse<Cast> response = new DetailResponse<>(newCast, createdBy, null);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
-//        }
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("name does exist",null));
+
     }
 
     @PutMapping("/{id}")
