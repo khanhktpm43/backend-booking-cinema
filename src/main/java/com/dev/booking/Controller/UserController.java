@@ -19,7 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/user")
-@Tag(name = "User API", description = "Sample API for demonstration")
+
 public class UserController {
     @Autowired
     private UserRepository userRepository;
@@ -54,7 +54,6 @@ public class UserController {
     }
 
     @PostMapping("/register")
-
     public ResponseEntity<ResponseObject<TokenDTO>> register(@RequestBody RegisterRequest request) {
         TokenDTO tokenDTO = userService.register(request);
         if (tokenDTO != null) {

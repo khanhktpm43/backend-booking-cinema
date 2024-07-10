@@ -8,6 +8,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -29,15 +31,19 @@ public class Showtime {
     @Column(nullable = false)
     private LocalDateTime endTime;
 
-    @ManyToOne
+    @ManyToOne()
     @JoinColumn(name = "movieID")
+   // @OnDelete(action = OnDeleteAction.CASCADE)
    // @JsonManagedReference("movie-showtimes")
     private Movie movie;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "roomID")
    // @JsonManagedReference("room-showtimes")
     private Room room;
+    @JsonIgnore
+    private boolean deleted = false;
+
     @JsonIgnore
     private Long createdBy;
 

@@ -9,6 +9,7 @@ import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
+import com.dev.booking.Service.MappingService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
@@ -30,24 +31,14 @@ public class SeatTypeController {
     private UserRepository userRepository;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
+    @Autowired
+    private MappingService mappingService;
 
     @GetMapping("")
     public ResponseEntity<ResponseObject<List<DetailResponse<SeatType>>>> getAll(){
         List<SeatType> seatTypes = seatTypeRepository.findAll();
 
-        List<DetailResponse<SeatType>> result = seatTypes.stream().map(type -> {
-            UserBasicDTO createdBy = null;
-            if (type.getCreatedBy() != null) {
-                User user = userRepository.findById(type.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            UserBasicDTO updatedBy = null;
-            if (type.getUpdatedBy() != null) {
-                User user = userRepository.findById(type.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            return new DetailResponse<>(type, createdBy, updatedBy);
-        }).collect(Collectors.toList());
+        List<DetailResponse<SeatType>> result = mappingService.mapToResponse(seatTypes);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
 
     }
@@ -55,19 +46,9 @@ public class SeatTypeController {
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> getById(@PathVariable Long id){
         if (seatTypeRepository.existsById(id)) {
-            UserBasicDTO createdBy = null;
-            UserBasicDTO updatedBy = null;
-
             SeatType type = seatTypeRepository.findById(id).orElse(null);
-            if (type.getCreatedBy() != null) {
-                User user = userRepository.findById(type.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            if (type.getUpdatedBy() != null) {
-                User user = userRepository.findById(type.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            DetailResponse<SeatType> response = new DetailResponse<>(type, createdBy, updatedBy);
+
+            DetailResponse<SeatType> response = mappingService.mapToResponse(type);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));

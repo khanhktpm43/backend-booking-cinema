@@ -9,6 +9,7 @@ import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
+import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.SpecialDayService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,11 +33,13 @@ public class SpecialDayController {
     private JwtRequestFilter jwtRequestFilter;
     @Autowired
     private SpecialDayService specialDayService;
+    @Autowired
+    private MappingService mappingService;
 
     @GetMapping("")
     public ResponseEntity<ResponseObject<List<DetailResponse<SpecialDay>>>> getAll(){
         List<SpecialDay> specialDays = specialDayRepository.findAll();
-        List<DetailResponse<SpecialDay>> result = specialDayService.mapSpecialDayToResponse(specialDays);
+        List<DetailResponse<SpecialDay>> result = mappingService.mapToResponse(specialDays);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
     @GetMapping("/month-year")
@@ -44,26 +47,15 @@ public class SpecialDayController {
             @RequestParam int month,
             @RequestParam int year){
         List<SpecialDay> specialDays = specialDayRepository.findByMothAndYear(month, year);
-        List<DetailResponse<SpecialDay>> result = specialDayService.mapSpecialDayToResponse(specialDays);
+        List<DetailResponse<SpecialDay>> result = mappingService.mapToResponse(specialDays);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SpecialDay>>> getById(@PathVariable Long id){
         if (specialDayRepository.existsById(id)) {
-            UserBasicDTO createdBy = null;
-            UserBasicDTO updatedBy = null;
-
             SpecialDay specialDay = specialDayRepository.findById(id).orElse(null);
-            if (specialDay!= null && specialDay.getCreatedBy() != null) {
-                User user = userRepository.findById(specialDay.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            if (specialDay!= null && specialDay.getUpdatedBy() != null) {
-                User user = userRepository.findById(specialDay.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            DetailResponse<SpecialDay> response = new DetailResponse<>(specialDay, createdBy, updatedBy);
+            DetailResponse<SpecialDay> response = mappingService.mapToResponse(specialDay);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));

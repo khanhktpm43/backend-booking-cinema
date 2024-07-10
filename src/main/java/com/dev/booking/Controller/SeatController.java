@@ -11,6 +11,7 @@ import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
+import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.SeatService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,11 +37,13 @@ public class SeatController {
     @Autowired
     private SeatService seatService;
     @Autowired
+    private MappingService mappingService;
+    @Autowired
     private RoomRepository roomRepository;
     @GetMapping("")
     public ResponseEntity<ResponseObject<List<DetailResponse<Seat>>>> getAll(){
         List<Seat> seats = seatRepository.findAll();
-        List<DetailResponse<Seat>> result = seatService.mapSeatToSeatResponse(seats);
+        List<DetailResponse<Seat>> result = mappingService.mapToResponse(seats);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
     @GetMapping("/room/id")
@@ -50,25 +53,14 @@ public class SeatController {
         }
         Room room = roomRepository.findById(id).orElseThrow();
         List<Seat> seats = seatRepository.findByRoom(room);
-        List<DetailResponse<Seat>> result = seatService.mapSeatToSeatResponse(seats);
+        List<DetailResponse<Seat>> result = mappingService.mapToResponse(seats);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Seat>>> getById(@PathVariable Long id){
         if (seatRepository.existsById(id)) {
-            UserBasicDTO createdBy = null;
-            UserBasicDTO updatedBy = null;
-
             Seat seat = seatRepository.findById(id).orElse(null);
-            if (seat!= null && seat.getCreatedBy() != null) {
-                User user = userRepository.findById(seat.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            if (seat!= null && seat.getUpdatedBy() != null) {
-                User user = userRepository.findById(seat.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            DetailResponse<Seat> response = new DetailResponse<>(seat, createdBy, updatedBy);
+            DetailResponse<Seat> response = mappingService.mapToResponse(seat);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));

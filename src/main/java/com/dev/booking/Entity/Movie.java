@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -12,7 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "movie")
-public class Movie {
+public class Movie  implements BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -39,6 +41,9 @@ public class Movie {
     private int duration;
 
     @JsonIgnore
+    private boolean deleted = false;
+
+    @JsonIgnore
     private Long createdBy;
 
     @JsonIgnore
@@ -52,14 +57,17 @@ public class Movie {
 
     @JsonIgnore
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
    // @JsonBackReference("movie-genres-movie")
     private Set<MovieGenre> movieGenres;
     @JsonIgnore
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
    // @JsonBackReference("movie-casts-movie")
     private Set<MovieCast> movieCasts;
     @JsonIgnore
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+   // @OnDelete(action = OnDeleteAction.CASCADE)
     //@JsonBackReference("movie-showtimes")
     private Set<Showtime> showtimes;
 

@@ -20,6 +20,10 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig  {
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Autowired
     private MyUserDetailsService userDetailsService;
@@ -27,10 +31,7 @@ public class SecurityConfig  {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+
 
     @Bean
    public DaoAuthenticationProvider authenticationProvider() {

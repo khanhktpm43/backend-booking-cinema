@@ -3,9 +3,13 @@ package com.dev.booking.Service;
 import com.dev.booking.Entity.Cast;
 import com.dev.booking.Entity.Genre;
 import com.dev.booking.Entity.Movie;
+import com.dev.booking.Entity.User;
 import com.dev.booking.Repository.MovieRepository;
+import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.ResponseDTO.CastDTO;
+import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.MovieResponse;
+import com.dev.booking.ResponseDTO.UserBasicDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
@@ -15,11 +19,14 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class MovieService {
     @Autowired
     private MovieRepository movieRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     public MovieResponse getById(Long id) {
         List<Object[]> results = movieRepository.findDetailById(id);
@@ -70,7 +77,21 @@ public class MovieService {
         return null;
     }
 
-
+//    public List<DetailResponse<Movie>> mapToResponse(List<Movie> movies){
+//        return movies.stream().map(movie -> {
+//            UserBasicDTO createdBy = null;
+//            if (movie.getCreatedBy() != null) {
+//                User user = userRepository.findById(movie.getCreatedBy()).orElse(null);
+//                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+//            }
+//            UserBasicDTO updatedBy = null;
+//            if (movie.getUpdatedBy() != null) {
+//                User user = userRepository.findById(movie.getUpdatedBy()).orElse(null);
+//                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+//            }
+//            return new DetailResponse<>(movie, createdBy, updatedBy);
+//        }).collect(Collectors.toList());
+//    }
     private LocalDateTime convertTimestampToLocalDateTime(Timestamp timestamp) {
         if (timestamp != null) {
             return timestamp.toLocalDateTime();

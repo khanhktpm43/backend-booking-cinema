@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MovieRepository extends JpaRepository<Movie, Long> {
@@ -20,4 +21,10 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
             "WHERE m.id =:movieId",
             nativeQuery = true)
     List<Object[]> findDetailById(@Param("movieId") Long movieId);
+
+    List<Movie> findByDeleted(boolean b);
+
+    Optional<Movie> findByIdAndDeleted(Long id, boolean b);
+
+    boolean existsByIdAndDeleted(Long id, boolean b);
 }

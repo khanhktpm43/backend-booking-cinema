@@ -12,6 +12,7 @@ import com.dev.booking.RequestDTO.MovieCastDTO;
 import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
+import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.MovieCastService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,12 +36,14 @@ public class MovieCastController {
     private MovieRepository movieRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private MappingService mappingService;
 
 
     @GetMapping("")
     public ResponseEntity<ResponseObject<List<DetailResponse<MovieCast>>>> getAll(){
         List<MovieCast> movieCasts = movieCastRepository.findAll();
-        List<DetailResponse<MovieCast>> responses = movieCastService.mapMovieCastToResponse(movieCasts);
+        List<DetailResponse<MovieCast>> responses =mappingService.mapToResponse(movieCasts);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
     @PostMapping("/movie")
@@ -55,19 +58,7 @@ public class MovieCastController {
     public ResponseEntity<ResponseObject<DetailResponse<MovieCast>>> getById(@PathVariable Long id){
         if(movieCastRepository.existsById(id)){
             MovieCast movieCast = movieCastRepository.findById(id).orElse(null);
-            UserBasicDTO createdBy = null;
-            UserBasicDTO updatedBy = null;
-            if(movieCast != null && movieCast.getCreatedBy() != null){
-                User user = userRepository.findById(movieCast.getCreatedBy()).orElse(null);
-                if(user != null)
-                    createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            if(movieCast != null && movieCast.getUpdatedBy() != null){
-                User user = userRepository.findById(movieCast.getUpdatedBy()).orElse(null);
-                if(user != null)
-                    updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            DetailResponse<MovieCast> response = new DetailResponse<>(movieCast, createdBy, updatedBy);
+            DetailResponse<MovieCast> response = mappingService.mapToResponse(movieCast);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));

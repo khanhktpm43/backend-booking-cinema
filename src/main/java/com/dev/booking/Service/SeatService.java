@@ -18,20 +18,5 @@ import java.util.stream.Collectors;
 public class SeatService {
     @Autowired
     private UserRepository userRepository;
-    public List<DetailResponse<Seat>> mapSeatToSeatResponse(List<Seat> seats){
-        List<DetailResponse<Seat>> result = seats.stream().map(seat -> {
-            UserBasicDTO createdBy = null;
-            if (seat.getCreatedBy() != null) {
-                User user = userRepository.findById(seat.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            UserBasicDTO updatedBy = null;
-            if (seat.getUpdatedBy() != null) {
-                User user = userRepository.findById(seat.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            return new DetailResponse<>(seat, createdBy, updatedBy);
-        }).collect(Collectors.toList());
-        return result;
-    }
+
 }

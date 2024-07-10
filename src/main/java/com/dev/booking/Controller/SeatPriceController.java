@@ -9,6 +9,7 @@ import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
+import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.SeatPriceService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,17 +32,20 @@ public class SeatPriceController {
     private JwtRequestFilter jwtRequestFilter;
     @Autowired
     private SeatPriceService seatPriceService;
+    @Autowired
+    private MappingService mappingService;
 
     @GetMapping("")
     public ResponseEntity<ResponseObject<List<DetailResponse<SeatPrice>>>> getAll(){
         List<SeatPrice> seatPrices = seatPriceRepository.findAll();
-        List<DetailResponse<SeatPrice>> responses = seatPriceService.mapToResponse(seatPrices);
+        List<DetailResponse<SeatPrice>> responses = mappingService.mapToResponse(seatPrices);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
     @GetMapping("{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SeatPrice>>> getById(@PathVariable Long id){
         if(seatPriceRepository.existsById(id)){
-            DetailResponse<SeatPrice> response = seatPriceService.getById(id);
+            SeatPrice seatPrice = seatPriceRepository.findById(id).orElse(null);
+            DetailResponse<SeatPrice> response = mappingService.mapToResponse(seatPrice);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));

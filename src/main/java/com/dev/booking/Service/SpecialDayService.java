@@ -26,22 +26,22 @@ public class SpecialDayService {
     @Autowired
     private SpecialDayRepository specialDayRepository;
 
-    public List<DetailResponse<SpecialDay>> mapSpecialDayToResponse(List<SpecialDay> specialDays){
-        List<DetailResponse<SpecialDay>> result = specialDays.stream().map(specialDay -> {
-            UserBasicDTO createdBy = null;
-            if (specialDay.getCreatedBy() != null) {
-                User user = userRepository.findById(specialDay.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            UserBasicDTO updatedBy = null;
-            if (specialDay.getUpdatedBy() != null) {
-                User user = userRepository.findById(specialDay.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            return new DetailResponse<>(specialDay, createdBy, updatedBy);
-        }).collect(Collectors.toList());
-        return result;
-    }
+//    public List<DetailResponse<SpecialDay>> mapSpecialDayToResponse(List<SpecialDay> specialDays){
+//        List<DetailResponse<SpecialDay>> result = specialDays.stream().map(specialDay -> {
+//            UserBasicDTO createdBy = null;
+//            if (specialDay.getCreatedBy() != null) {
+//                User user = userRepository.findById(specialDay.getCreatedBy()).orElse(null);
+//                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+//            }
+//            UserBasicDTO updatedBy = null;
+//            if (specialDay.getUpdatedBy() != null) {
+//                User user = userRepository.findById(specialDay.getUpdatedBy()).orElse(null);
+//                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+//            }
+//            return new DetailResponse<>(specialDay, createdBy, updatedBy);
+//        }).collect(Collectors.toList());
+//        return result;
+//    }
 
     public int checkDayType(Showtime showtime){
         if(specialDayRepository.isSpecialDay(showtime) == 1){

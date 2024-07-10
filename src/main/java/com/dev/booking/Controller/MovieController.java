@@ -11,6 +11,7 @@ import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.MovieResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
+import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.MovieService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -35,37 +37,28 @@ public class MovieController {
     @Autowired
     private MovieService movieService;
     @Autowired
+    private MappingService mappingService;
+    @Autowired
     private UserRepository userRepository;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
-
     @GetMapping("")
     public ResponseEntity<ResponseObject<List<DetailResponse<Movie>>>> getAll() {
-        List<Movie> movies = movieRepository.findAll();
-
-        List<DetailResponse<Movie>> result = movies.stream().map(movie -> {
-            UserBasicDTO createdBy = null;
-            if (movie.getCreatedBy() != null) {
-                User user = userRepository.findById(movie.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            UserBasicDTO updatedBy = null;
-            if (movie.getUpdatedBy() != null) {
-                User user = userRepository.findById(movie.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            return new DetailResponse<>(movie, createdBy, updatedBy);
-        }).collect(Collectors.toList());
+        List<Movie> movies = movieRepository.findByDeleted(false);
+        List<DetailResponse<Movie>> result = mappingService.mapToResponse(movies);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
-
     }
-
-    @GetMapping("{id}")
+    @GetMapping("/deleted")
+    public ResponseEntity<ResponseObject<List<DetailResponse<Movie>>>> getAllByDeleted() {
+        List<Movie> movies = movieRepository.findByDeleted(true);
+        List<DetailResponse<Movie>> result = mappingService.mapToResponse(movies);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
+    }
+    @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<MovieResponse>>> getById(@PathVariable Long id) {
         if (movieRepository.existsById(id)) {
             UserBasicDTO createdBy = null;
             UserBasicDTO updatedBy = null;
-
             MovieResponse movie = movieService.getById(id);
             if(movie.getMovie().getCreatedBy() != null){
                 User user = userRepository.findById(movie.getMovie().getCreatedBy()).orElse(null);
@@ -90,9 +83,6 @@ public class MovieController {
                                                         @RequestParam("image") MultipartFile image,
                                                         @RequestParam("trailer") String trailer,
                                                         HttpServletRequest request) {
-//        Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-//        String username = (String) tokenAndUsername.get("username");
-//        User userReq = userRepository.findByUserName(username).orElse(null);
         User userReq = jwtRequestFilter.getUserRequest(request);
         if(userReq == null){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
@@ -113,13 +103,10 @@ public class MovieController {
             UserBasicDTO createdBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
             DetailResponse<Movie> response = new DetailResponse<>(newMovie, createdBy, null);
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
-
         } catch (IOException e) {
-
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject<>("Could not save movie", null));
         }
     }
-
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Movie>>> update(@PathVariable Long id,
                                                  @RequestParam("name") String name,
@@ -131,9 +118,6 @@ public class MovieController {
                                                         HttpServletRequest request) {
         if (movieRepository.existsById(id)) {
             try {
-//                Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-//                String username = (String) tokenAndUsername.get("username");
-//                User userReq = userRepository.findByUserName(username).orElse(null);
                 User userReq = jwtRequestFilter.getUserRequest(request);
                 if(userReq == null){
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
@@ -161,13 +145,36 @@ public class MovieController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
     }
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseObject<Movie>> delete(@PathVariable Long id){
-        if(movieRepository.existsById(id)){
-            movieRepository.deleteById(id);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<Movie>("",null));
+    public ResponseEntity<ResponseObject<Movie>> softDelete(@PathVariable Long id, HttpServletRequest request){
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<Movie>("id does not exist",null));
-
+        if(movieRepository.existsByIdAndDeleted(id, false)){
+            Movie movie = movieRepository.findByIdAndDeleted(id, false).orElse(null);
+            movie.setDeleted(true);
+            movie.setUpdatedBy(userReq.getId());
+            movie.setUpdatedAt(LocalDateTime.now());
+            movieRepository.save(movie);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",null));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+    }
+    @PatchMapping("/{id}")
+    public  ResponseEntity<ResponseObject<Movie>> restore(@PathVariable Long id, HttpServletRequest request){
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+        }
+        Movie movie = movieRepository.findByIdAndDeleted(id, true).orElse(null);
+        if (movie == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+        }
+        movie.setDeleted(false);
+        movie.setUpdatedAt(LocalDateTime.now());
+        movie.setUpdatedBy(userReq.getId());
+        movieRepository.save(movie);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",movie));
     }
 
 }

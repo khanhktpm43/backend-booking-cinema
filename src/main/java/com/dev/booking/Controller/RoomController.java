@@ -11,6 +11,7 @@ import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.MovieResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
+import com.dev.booking.Service.MappingService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.CreatedBy;
@@ -36,44 +37,26 @@ public class RoomController {
     private UserRepository userRepository;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
-
+    @Autowired
+    private MappingService mappingService;
     @GetMapping("")
     public ResponseEntity<ResponseObject<List<DetailResponse<Room>>>> getAll() {
-        List<Room> rooms = roomRepository.findAll();
-
-        List<DetailResponse<Room>> result = rooms.stream().map(room -> {
-            UserBasicDTO createdBy = null;
-            if (room.getCreatedBy() != null) {
-                User user = userRepository.findById(room.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            UserBasicDTO updatedBy = null;
-            if (room.getUpdatedBy() != null) {
-                User user = userRepository.findById(room.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            return new DetailResponse<>(room, createdBy, updatedBy);
-        }).collect(Collectors.toList());
+        List<Room> rooms = roomRepository.findByDeleted(false);
+        List<DetailResponse<Room>> result = mappingService.mapToResponse(rooms);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
-
+    }
+    @GetMapping("/deleted")
+    public ResponseEntity<ResponseObject<List<DetailResponse<Room>>>> getAllByDeleted() {
+        List<Room> rooms = roomRepository.findByDeleted(true);
+        List<DetailResponse<Room>> result = mappingService.mapToResponse(rooms);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Room>>> getById(@PathVariable Long id) {
         if (roomRepository.existsById(id)) {
-            UserBasicDTO createdBy = null;
-            UserBasicDTO updatedBy = null;
-
             Room room = roomRepository.findById(id).orElse(null);
-            if (room.getCreatedBy() != null) {
-                User user = userRepository.findById(room.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            if (room.getUpdatedBy() != null) {
-                User user = userRepository.findById(room.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            DetailResponse<Room> response = new DetailResponse<>(room, createdBy, updatedBy);
+            DetailResponse<Room> response = mappingService.mapToResponse(room);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
@@ -86,9 +69,6 @@ public class RoomController {
         if (roomRepository.exists(example)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("Information already exists", null));
         }
-//        Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-//        String username = (String) tokenAndUsername.get("username");
-//        User userReq = userRepository.findByUserName(username).orElse(null);
         User userReq = jwtRequestFilter.getUserRequest(request);
         if(userReq == null){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
@@ -106,9 +86,6 @@ public class RoomController {
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Room>>> update(@PathVariable Long id, @RequestBody Room room, HttpServletRequest request) {
         if (roomRepository.existsById(id)) {
-//            Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-//            String username = (String) tokenAndUsername.get("username");
-//            User userReq = userRepository.findByUserName(username).orElse(null);
             User userReq = jwtRequestFilter.getUserRequest(request);
             if(userReq == null){
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
@@ -128,13 +105,36 @@ public class RoomController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseObject<DetailResponse<Room>>> delete(@PathVariable Long id){
-        if(roomRepository.existsById(id)){
-            roomRepository.deleteById(id);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", null));
+    public ResponseEntity<ResponseObject<DetailResponse<Room>>> delete(@PathVariable Long id, HttpServletRequest request){
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
         }
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
+        if(roomRepository.existsByIdAndDeleted(id, false)){
+            Room room = roomRepository.findById(id).orElse(null);
+            room.setDeleted(true);
+            room.setUpdatedBy(userReq.getId());
+            room.setUpdatedAt(LocalDateTime.now());
+            roomRepository.save(room);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",null));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+    }
+    @PatchMapping("/{id}")
+    public  ResponseEntity<ResponseObject<Room>> restore(@PathVariable Long id, HttpServletRequest request){
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+        }
+        Room room = roomRepository.findByIdAndDeleted(id, true).orElse(null);
+        if (room == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+        }
+        room.setDeleted(false);
+        room.setUpdatedAt(LocalDateTime.now());
+        room.setUpdatedBy(userReq.getId());
+        roomRepository.save(room);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",room));
     }
 }
 

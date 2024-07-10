@@ -12,6 +12,7 @@ import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 
 import com.dev.booking.ResponseDTO.UserBasicDTO;
+import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.MovieGenreService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,11 +36,13 @@ public class MovieGenreController {
     private UserRepository userRepository;
     @Autowired
     private MovieRepository movieRepository;
+    @Autowired
+    private MappingService mappingService;
 
     @GetMapping("")
     public ResponseEntity<ResponseObject<List<DetailResponse<MovieGenre>>>> getAll(){
         List<MovieGenre> movieGenres = movieGenreRepository.findAll();
-        List<DetailResponse<MovieGenre>> responses = movieGenreService.mapMovieGenreToResponse(movieGenres);
+        List<DetailResponse<MovieGenre>> responses = mappingService.mapToResponse(movieGenres);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
     @GetMapping("/movie")
@@ -47,7 +50,7 @@ public class MovieGenreController {
         if(movie.getId() == null || !movieRepository.existsById(movie.getId()))
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("movieId does not exist",null));
         List<MovieGenre> movieGenres = movieGenreRepository.findByMovie(movie);
-        List<DetailResponse<MovieGenre>> responses = movieGenreService.mapMovieGenreToResponse(movieGenres);
+        List<DetailResponse<MovieGenre>> responses = mappingService.mapToResponse(movieGenres);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
     @GetMapping("/{id}")

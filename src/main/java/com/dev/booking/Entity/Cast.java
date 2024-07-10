@@ -16,7 +16,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "cast")
-public class Cast {
+public class Cast implements BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,8 +36,6 @@ public class Cast {
     @Column(nullable = true)
     private LocalDateTime updatedAt;
     @OneToMany(mappedBy = "cast", cascade = CascadeType.ALL, orphanRemoval = true)
- //  @JsonBackReference("movie-casts-casts")
-//@JsonIgnoreProperties
     @JsonIgnore
     private Set<MovieCast> movieCasts;
     // Getters and setters

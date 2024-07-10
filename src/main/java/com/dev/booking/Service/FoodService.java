@@ -29,41 +29,41 @@ public class FoodService {
     private UserRepository userRepository;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
-    public List<DetailResponse<Food>> getAll() {
-        List<Food> foods = foodRepository.findAll();
-        return foods.stream().map(food -> {
-            UserBasicDTO createdBy = null;
-            if (food.getCreatedBy() != null) {
-                User user = userRepository.findById(food.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            UserBasicDTO updatedBy = null;
-            if (food.getUpdatedBy() != null) {
-                User user = userRepository.findById(food.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            return new DetailResponse<>(food, createdBy, updatedBy);
-        }).collect(Collectors.toList());
-    }
+//    public List<DetailResponse<Food>> getAll() {
+//        List<Food> foods = foodRepository.findAll();
+//        return foods.stream().map(food -> {
+//            UserBasicDTO createdBy = null;
+//            if (food.getCreatedBy() != null) {
+//                User user = userRepository.findById(food.getCreatedBy()).orElse(null);
+//                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+//            }
+//            UserBasicDTO updatedBy = null;
+//            if (food.getUpdatedBy() != null) {
+//                User user = userRepository.findById(food.getUpdatedBy()).orElse(null);
+//                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+//            }
+//            return new DetailResponse<>(food, createdBy, updatedBy);
+//        }).collect(Collectors.toList());
+//    }
 
-    public DetailResponse<Food> getById(Long id){
-        Food food = foodRepository.findById(id).orElse(null);
-        if(food == null){
-            return null;
-        }
-        UserBasicDTO createdBy = null;
-        UserBasicDTO updatedBy = null;
-        if(food.getUpdatedBy() != null && userRepository.existsById(food.getUpdatedBy())){
-            User user = userRepository.findById(food.getUpdatedBy()).orElse(null);
-            updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-        }
-        if(food.getCreatedBy() != null && userRepository.existsById(food.getCreatedBy())){
-            User user = userRepository.findById(food.getCreatedBy()).orElse(null);
-           createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-        }
-        DetailResponse<Food> response = new DetailResponse<>(food,createdBy,updatedBy);
-        return response;
-    }
+//    public DetailResponse<Food> getById(Long id){
+//        Food food = foodRepository.findById(id).orElse(null);
+//        if(food == null){
+//            return null;
+//        }
+//        UserBasicDTO createdBy = null;
+//        UserBasicDTO updatedBy = null;
+//        if(food.getUpdatedBy() != null && userRepository.existsById(food.getUpdatedBy())){
+//            User user = userRepository.findById(food.getUpdatedBy()).orElse(null);
+//            updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+//        }
+//        if(food.getCreatedBy() != null && userRepository.existsById(food.getCreatedBy())){
+//            User user = userRepository.findById(food.getCreatedBy()).orElse(null);
+//           createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+//        }
+//        DetailResponse<Food> response = new DetailResponse<>(food,createdBy,updatedBy);
+//        return response;
+//    }
 
     public DetailResponse<Food> create(HttpServletRequest request, Food food) {
         User userReq = jwtRequestFilter.getUserRequest(request);

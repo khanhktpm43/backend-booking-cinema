@@ -1,8 +1,6 @@
 package com.dev.booking.Entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,7 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "room")
-public class Room {
+public class Room  implements BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,8 +25,11 @@ public class Room {
     @Column(nullable = false)
     private String name;
 
-//    @Column(nullable = false)
-//    private boolean status;
+
+    @JsonIgnore
+    private boolean deleted = false;
+
+
 
     @JsonIgnore
     private Long createdBy;
