@@ -2,6 +2,7 @@ package com.dev.booking.Controller;
 
 import com.dev.booking.Entity.Room;
 import com.dev.booking.Entity.SeatType;
+import com.dev.booking.Entity.Showtime;
 import com.dev.booking.Entity.User;
 import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.SeatTypeRepository;
@@ -36,8 +37,14 @@ public class SeatTypeController {
 
     @GetMapping("")
     public ResponseEntity<ResponseObject<List<DetailResponse<SeatType>>>> getAll(){
-        List<SeatType> seatTypes = seatTypeRepository.findAll();
+        List<SeatType> seatTypes = seatTypeRepository.findAllByDeleted(false);
+        List<DetailResponse<SeatType>> result = mappingService.mapToResponse(seatTypes);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
 
+    }
+    @GetMapping("/deleted")
+    public ResponseEntity<ResponseObject<List<DetailResponse<SeatType>>>> getAllByDeleted(){
+        List<SeatType> seatTypes = seatTypeRepository.findAllByDeleted(true);
         List<DetailResponse<SeatType>> result = mappingService.mapToResponse(seatTypes);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
 
@@ -99,12 +106,35 @@ public class SeatTypeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> delete(@PathVariable Long id){
-        if(seatTypeRepository.existsById(id)){
-            seatTypeRepository.deleteById(id);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", null));
+    public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> delete(@PathVariable Long id, HttpServletRequest request){
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
+        if(seatTypeRepository.existsByIdAndDeleted(id, false)){
+            SeatType seatType = seatTypeRepository.findById(id).orElse(null);
+            seatType.setDeleted(true);
+            seatType.setUpdatedBy(userReq.getId());
+            seatType.setUpdatedAt(LocalDateTime.now());
+            seatTypeRepository.save(seatType);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",null));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
     }
-
+    @PatchMapping("/{id}")
+    public  ResponseEntity<ResponseObject<SeatType>> restore(@PathVariable Long id, HttpServletRequest request){
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+        }
+        SeatType seatType = seatTypeRepository.findByIdAndDeleted(id, true).orElse(null);
+        if (seatType == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+        }
+        seatType.setDeleted(false);
+        seatType.setUpdatedAt(LocalDateTime.now());
+        seatType.setUpdatedBy(userReq.getId());
+        seatTypeRepository.save(seatType);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",seatType));
+    }
 }

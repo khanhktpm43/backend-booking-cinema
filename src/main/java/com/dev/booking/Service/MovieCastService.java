@@ -49,37 +49,54 @@ public class MovieCastService {
 
     public DetailResponse<Movie> attachCasts(HttpServletRequest request, MovieCastDTO movieCastDTO) {
         User userReq = jwtRequestFilter.getUserRequest(request);
-        if (userReq == null || movieCastDTO.getMovie().getId() == null || !movieRepository.existsById(movieCastDTO.getMovie().getId()) || movieCastDTO.getCasts().isEmpty())
+        if (userReq == null || movieCastDTO.getMovie().getId() == null || !movieRepository.existsById(movieCastDTO.getMovie().getId()) || movieCastDTO.getCasts().isEmpty()) {
             return null;
+        }
         Movie movie = movieRepository.findById(movieCastDTO.getMovie().getId()).orElse(null);
-        for (CastDTO cast : movieCastDTO.getCasts()) {
-            if (cast.getCast().getId() == null || !castRepository.existsById(cast.getCast().getId()) || (cast.getRoleCast() != 1 && cast.getRoleCast() != 2))
+        if (movie == null) {
+            return null;
+        }
+
+        for (CastDTO castDTO : movieCastDTO.getCasts()) {
+            if (castDTO.getCast().getId() == null || !castRepository.existsById(castDTO.getCast().getId()) || (castDTO.getRoleCast() != 1 && castDTO.getRoleCast() != 2)) {
                 continue;
+            }
+            Cast managedCast = castRepository.findById(castDTO.getCast().getId()).orElse(null);
+            if (managedCast == null) {
+                continue;
+            }
             MovieCast movieCast = new MovieCast();
             movieCast.setMovie(movie);
-            movieCast.setCast(cast.getCast());
-            movieCast.setRoleCast(cast.getRoleCast());
+            movieCast.setCast(managedCast);
+            movieCast.setRoleCast(castDTO.getRoleCast());
             movieCast.setCreatedAt(LocalDateTime.now());
             movieCast.setUpdatedAt(null);
             movieCast.setCreatedBy(userReq.getId());
             movieCastRepository.save(movieCast);
         }
+
         Movie result = movieRepository.findById(movieCastDTO.getMovie().getId()).orElse(null);
+        if (result == null) {
+            return null;
+        }
         UserBasicDTO createdBy = null;
         UserBasicDTO updatedBy = null;
-        if (result != null && result.getCreatedBy() != null) {
+        if (result.getCreatedBy() != null) {
             User user = userRepository.findById(result.getCreatedBy()).orElse(null);
-            if (user != null)
+            if (user != null) {
                 createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+            }
         }
-        if (result != null && result.getUpdatedBy() != null) {
+        if (result.getUpdatedBy() != null) {
             User user = userRepository.findById(result.getUpdatedBy()).orElse(null);
-            if (user != null)
+            if (user != null) {
                 updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+            }
         }
         DetailResponse<Movie> response = new DetailResponse<>(result, createdBy, updatedBy);
         return response;
     }
+
 
     public DetailResponse<MovieCast> update(User userReq, Long id, MovieCast movieCast) {
         MovieCast movieCast1 = movieCastRepository.findById(id).orElse(null);

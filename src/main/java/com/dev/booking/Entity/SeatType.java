@@ -20,18 +20,15 @@ public class SeatType implements BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String code;
-
     @Column(nullable = false)
     private String name;
-
+    @JsonIgnore
+    private boolean deleted = false;
     @JsonIgnore
     private Long createdBy;
-
     @JsonIgnore
     private Long updatedBy;
-
     @Column(nullable = true)
     private LocalDateTime createdAt;
 
