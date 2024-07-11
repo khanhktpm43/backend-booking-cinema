@@ -104,7 +104,6 @@ public class SpecialDayController {
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
-
     }
 
     @DeleteMapping("/{id}")
