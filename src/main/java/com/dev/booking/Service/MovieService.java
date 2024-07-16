@@ -42,9 +42,11 @@ public class MovieService {
             byte[] blobTrailer = (byte[]) result[6];
             String trailer = new String(blobTrailer, StandardCharsets.UTF_8);
             LocalDateTime createdAt =  convertTimestampToLocalDateTime((Timestamp) result[7]);
-            Long createdBy = (Long) result[8];
+            Long createdId = (Long) result[8];
+            User createdBy = userRepository.findById(createdId).orElse(null);
             LocalDateTime updatedAt =  convertTimestampToLocalDateTime((Timestamp) result[9]);
-            Long updatedBy = (Long) result[10];
+            Long updatedId = (Long) result[10];
+            User updatedBy = userRepository.findById(updatedId).orElse(null);
             Movie movie = new Movie(movieId,movieName,release,image,overview,trailer,duration,createdAt, createdBy, updatedAt, updatedBy);
             List<Genre> genres = new ArrayList<>();
             List<CastDTO> casts = new ArrayList<>();
@@ -76,22 +78,6 @@ public class MovieService {
         }
         return null;
     }
-
-//    public List<DetailResponse<Movie>> mapToResponse(List<Movie> movies){
-//        return movies.stream().map(movie -> {
-//            UserBasicDTO createdBy = null;
-//            if (movie.getCreatedBy() != null) {
-//                User user = userRepository.findById(movie.getCreatedBy()).orElse(null);
-//                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-//            }
-//            UserBasicDTO updatedBy = null;
-//            if (movie.getUpdatedBy() != null) {
-//                User user = userRepository.findById(movie.getUpdatedBy()).orElse(null);
-//                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-//            }
-//            return new DetailResponse<>(movie, createdBy, updatedBy);
-//        }).collect(Collectors.toList());
-//    }
     private LocalDateTime convertTimestampToLocalDateTime(Timestamp timestamp) {
         if (timestamp != null) {
             return timestamp.toLocalDateTime();

@@ -18,27 +18,12 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "genre")
-public class Genre implements BaseEntity{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Genre extends BaseEntity {
 
     @Column(nullable = false)
     private String name;
-    @JsonIgnore
-    private Long createdBy;
 
     @JsonIgnore
-    private Long updatedBy;
-
-    @Column(nullable = true)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
-
-   //@JsonBackReference("movie-genres-genres")
-   @JsonIgnore
     @OneToMany(mappedBy = "genre", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<MovieGenre> movieGenres;
 

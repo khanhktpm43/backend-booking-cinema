@@ -2,6 +2,8 @@ package com.dev.booking.Repository;
 
 import com.dev.booking.Entity.SeatPrice;
 import com.dev.booking.Entity.Showtime;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,7 +26,7 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Long> {
             "GROUP BY s.movieid", nativeQuery = true)
     List<Object[]> findShowtimesByDate(@Param("date") LocalDate date);
 
-    List<Showtime> findByDeleted(boolean b);
+    Page<Showtime> findByDeleted(boolean b, Pageable pageable);
 
     boolean existsByIdAndDeleted(Long id, boolean b);
 

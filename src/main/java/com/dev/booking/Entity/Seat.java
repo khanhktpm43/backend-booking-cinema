@@ -17,10 +17,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "seat")
-public class Seat implements BaseEntity{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Seat extends BaseEntity{
 
     @Column(nullable = false)
     private String name;
@@ -33,28 +30,16 @@ public class Seat implements BaseEntity{
 
     @ManyToOne
     @JoinColumn(name = "typeID")
-    //@JsonManagedReference("seat-type-seats")
     private SeatType seatType;
 
     @ManyToOne
     @JoinColumn(name = "roomID")
-   // @JsonManagedReference("room-seats")
     private Room room;
     @JsonIgnore
-    private Long createdBy;
-
-    @JsonIgnore
-    private Long updatedBy;
-
-    @Column(nullable = true)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
+    private boolean deleted = false;
 
     @JsonIgnore
     @OneToMany(mappedBy = "seat", cascade = CascadeType.ALL, orphanRemoval = true)
-  //  @JsonBackReference("seat-tickets")
     private Set<Ticket> tickets;
 
 

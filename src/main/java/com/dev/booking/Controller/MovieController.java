@@ -15,6 +15,10 @@ import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.MovieService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +34,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("api/v1/movie")
+@RequestMapping("api/v1/movies")
 public class MovieController {
     @Autowired
     private MovieRepository movieRepository;
@@ -43,32 +47,34 @@ public class MovieController {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
     @GetMapping("")
-    public ResponseEntity<ResponseObject<List<DetailResponse<Movie>>>> getAll() {
-        List<Movie> movies = movieRepository.findByDeleted(false);
-        List<DetailResponse<Movie>> result = mappingService.mapToResponse(movies);
+    public ResponseEntity<ResponseObject<Page<DetailResponse<Movie>>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+
+        Page<Movie> movies = movieRepository.findByDeleted(false, pageable);
+        Page<DetailResponse<Movie>> result = mappingService.mapToResponse(movies);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
     @GetMapping("/deleted")
-    public ResponseEntity<ResponseObject<List<DetailResponse<Movie>>>> getAllByDeleted() {
-        List<Movie> movies = movieRepository.findByDeleted(true);
-        List<DetailResponse<Movie>> result = mappingService.mapToResponse(movies);
+    public ResponseEntity<ResponseObject<Page<DetailResponse<Movie>>>> getAllByDeleted(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+
+        Page<Movie> movies = movieRepository.findByDeleted(true, pageable);
+        Page<DetailResponse<Movie>> result = mappingService.mapToResponse(movies);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<MovieResponse>>> getById(@PathVariable Long id) {
         if (movieRepository.existsById(id)) {
-            UserBasicDTO createdBy = null;
-            UserBasicDTO updatedBy = null;
             MovieResponse movie = movieService.getById(id);
-            if(movie.getMovie().getCreatedBy() != null){
-                User user = userRepository.findById(movie.getMovie().getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            if(movie.getMovie().getUpdatedBy() != null){
-                User user = userRepository.findById(movie.getMovie().getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            DetailResponse<MovieResponse> response = new DetailResponse<>(movie,createdBy,updatedBy);
+            DetailResponse<MovieResponse> response = new DetailResponse<>(movie,movie.getMovie().getCreatedBy(), movie.getMovie().getUpdatedBy());
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
@@ -96,12 +102,10 @@ public class MovieController {
             movie.setImage(image.getBytes());
             movie.setTrailer(trailer);
             movie.setCreatedAt(LocalDateTime.now());
-            movie.setCreatedBy(userReq.getId());
+            movie.setCreatedBy(userReq);
             movie.setUpdatedAt(null);
             Movie newMovie = movieRepository.save(movie);
-
-            UserBasicDTO createdBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-            DetailResponse<Movie> response = new DetailResponse<>(newMovie, createdBy, null);
+            DetailResponse<Movie> response = new DetailResponse<>(newMovie, newMovie.getCreatedBy(), null);
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject<>("Could not save movie", null));
@@ -131,12 +135,12 @@ public class MovieController {
                 movie.setImage(image.getBytes());
                 movie.setTrailer(trailer);
                 movie.setUpdatedAt(LocalDateTime.now());
-                movie.setUpdatedBy(userReq.getId());
+                movie.setUpdatedBy(userReq);
                 Movie newMovie = movieRepository.save(movie);
-                User user = userRepository.findById(newMovie.getCreatedBy()).orElse(null);
-                UserBasicDTO createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-                UserBasicDTO updatedBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-                DetailResponse<Movie> response = new DetailResponse<>(newMovie, createdBy, updatedBy);
+//                User user = userRepository.findById(newMovie.getCreatedBy().getId()).orElse(null);
+//                UserBasicDTO createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+//                UserBasicDTO updatedBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
+                DetailResponse<Movie> response = new DetailResponse<>(newMovie, newMovie.getCreatedBy(), userReq);
                 return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
             } catch (IOException e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject<>("Could not update movie",null));
@@ -153,7 +157,7 @@ public class MovieController {
         if(movieRepository.existsByIdAndDeleted(id, false)){
             Movie movie = movieRepository.findByIdAndDeleted(id, false).orElse(null);
             movie.setDeleted(true);
-            movie.setUpdatedBy(userReq.getId());
+            movie.setUpdatedBy(userReq);
             movie.setUpdatedAt(LocalDateTime.now());
             movieRepository.save(movie);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",null));
@@ -172,7 +176,7 @@ public class MovieController {
         }
         movie.setDeleted(false);
         movie.setUpdatedAt(LocalDateTime.now());
-        movie.setUpdatedBy(userReq.getId());
+        movie.setUpdatedBy(userReq);
         movieRepository.save(movie);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",movie));
     }

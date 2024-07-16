@@ -13,21 +13,24 @@ import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.SeatPriceService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("api/v1/seat-price")
+@RequestMapping("api/v1/seat-prices")
 public class SeatPriceController {
     @Autowired
     private SeatPriceRepository seatPriceRepository;
-    @Autowired
-    private UserRepository userRepository;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
     @Autowired
@@ -36,9 +39,14 @@ public class SeatPriceController {
     private MappingService mappingService;
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject<List<DetailResponse<SeatPrice>>>> getAll(){
-        List<SeatPrice> seatPrices = seatPriceRepository.findAll();
-        List<DetailResponse<SeatPrice>> responses = mappingService.mapToResponse(seatPrices);
+    public ResponseEntity<ResponseObject<Page<DetailResponse<SeatPrice>>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+        Page<SeatPrice> seatPrices = seatPriceRepository.findAll(pageable);
+        Page<DetailResponse<SeatPrice>> responses = mappingService.mapToResponse(seatPrices);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
     @GetMapping("{id}")
@@ -57,13 +65,17 @@ public class SeatPriceController {
             if(userReq == null){
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
             }
+//            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+//            LocalDateTime start = LocalDateTime.parse(seatPrice.getStartDate().toString(), formatter);
+//            LocalDateTime end = LocalDateTime.parse(seatPrice.getEndDate().toString(), formatter);
             seatPrice.setId(null);
-            seatPrice.setCreatedBy(userReq.getId());
+            seatPrice.setCreatedBy(userReq);
             seatPrice.setCreatedAt(LocalDateTime.now());
+//            seatPrice.setStartDate(start);
+//            seatPrice.setEndDate(end);
             seatPrice.setUpdatedAt(null);
             SeatPrice seatPrice1 = seatPriceRepository.save(seatPrice);
-            UserBasicDTO createdBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-            DetailResponse<SeatPrice> response = new DetailResponse<>(seatPrice1, createdBy, null);
+            DetailResponse<SeatPrice> response = new DetailResponse<>(seatPrice1, userReq, null);
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("invalid", null));
@@ -88,14 +100,9 @@ public class SeatPriceController {
                seatPrice1.setWeekend(seatPrice.isWeekend());
                seatPrice1.setSpecialDay(seatPrice.isSpecialDay());
                seatPrice1.setUpdatedAt(LocalDateTime.now());
-               seatPrice1.setUpdatedBy(userReq.getId());
+               seatPrice1.setUpdatedBy(userReq);
                SeatPrice seatPrice2 =  seatPriceRepository.save(seatPrice1);
-               UserBasicDTO createdBy = null;
-               User user = userRepository.findById(seatPrice1.getCreatedBy()).orElse(null);
-               if(user != null)
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-               UserBasicDTO updatedBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-               DetailResponse<SeatPrice> response = new DetailResponse<>(seatPrice2, createdBy, updatedBy);
+               DetailResponse<SeatPrice> response = new DetailResponse<>(seatPrice2, seatPrice2.getCreatedBy(), seatPrice2.getUpdatedBy());
                return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
            }
 

@@ -1,9 +1,6 @@
 package com.dev.booking.Controller;
 
-import com.dev.booking.Entity.Room;
-import com.dev.booking.Entity.Seat;
-import com.dev.booking.Entity.SeatType;
-import com.dev.booking.Entity.User;
+import com.dev.booking.Entity.*;
 import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.RoomRepository;
 import com.dev.booking.Repository.SeatRepository;
@@ -15,7 +12,8 @@ import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.SeatService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
+import org.springframework.data.domain.*;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,36 +24,50 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("api/v1/seat")
+@RequestMapping("api/v1/seats")
 public class SeatController {
     @Autowired
     private SeatRepository seatRepository;
-    @Autowired
-    private UserRepository userRepository;
+
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
-    @Autowired
-    private SeatService seatService;
+
     @Autowired
     private MappingService mappingService;
-    @Autowired
-    private RoomRepository roomRepository;
+
+
     @GetMapping("")
-    public ResponseEntity<ResponseObject<List<DetailResponse<Seat>>>> getAll(){
-        List<Seat> seats = seatRepository.findAll();
-        List<DetailResponse<Seat>> result = mappingService.mapToResponse(seats);
+    public ResponseEntity<ResponseObject<Page<DetailResponse<Seat>>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+        Page<Seat> seats = seatRepository.findAllByDeleted(false, pageable);
+        Page<DetailResponse<Seat>> result = mappingService.mapToResponse(seats);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
-    @GetMapping("/room/id")
-    public ResponseEntity<ResponseObject<List<DetailResponse<Seat>>>> getByRoom(@PathVariable Long id){
-        if(!roomRepository.existsById(id)){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
-        }
-        Room room = roomRepository.findById(id).orElseThrow();
-        List<Seat> seats = seatRepository.findByRoom(room);
-        List<DetailResponse<Seat>> result = mappingService.mapToResponse(seats);
+    @GetMapping("/deleted")
+    public ResponseEntity<ResponseObject<Page<DetailResponse<Seat>>>> getAllByDeleted(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+        Page<Seat> seats = seatRepository.findAllByDeleted(false, pageable);
+        Page<DetailResponse<Seat>> result = mappingService.mapToResponse(seats);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
+//    @GetMapping("/room/id")
+//    public ResponseEntity<ResponseObject<List<DetailResponse<Seat>>>> getByRoom(@PathVariable Long id){
+//        if(!roomRepository.existsById(id)){
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
+//        }
+//        Room room = roomRepository.findByIdAndDeleted(id,false).orElseThrow();
+//        List<Seat> seats = seatRepository.findByRoomAndDeleted(room,false);
+//        List<DetailResponse<Seat>> result = mappingService.mapToResponse(seats);
+//        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
+//    }
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Seat>>> getById(@PathVariable Long id){
         if (seatRepository.existsById(id)) {
@@ -81,12 +93,11 @@ public class SeatController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
         }
         seat.setId(null);
-        seat.setCreatedBy(userReq.getId());
+        seat.setCreatedBy(userReq);
         seat.setCreatedAt(LocalDateTime.now());
         seat.setUpdatedAt(null);
         Seat newSeat = seatRepository.save(seat);
-        UserBasicDTO createdBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-        DetailResponse<Seat> response = new DetailResponse<>(newSeat, createdBy, null);
+        DetailResponse<Seat> response = new DetailResponse<>(newSeat, newSeat.getCreatedBy(), null);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
 
@@ -108,25 +119,45 @@ public class SeatController {
             seat1.setSeatType(seat.getSeatType());
             seat1.setName(seat.getName());
             seat1.setUpdatedAt(LocalDateTime.now());
-            seat1.setUpdatedBy(userReq.getId());
+            seat1.setUpdatedBy(userReq);
             Seat newSeat = seatRepository.save(seat1);
-            User user = userRepository.findById(newSeat.getCreatedBy()).orElse(null);
-            UserBasicDTO createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            UserBasicDTO updatedBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-            DetailResponse<Seat> response = new DetailResponse<>(newSeat, createdBy, updatedBy);
+            DetailResponse<Seat> response = new DetailResponse<>(newSeat, newSeat.getCreatedBy(), userReq);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
 
     }
-
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseObject<DetailResponse<Seat>>> delete(@PathVariable Long id){
-        if(seatRepository.existsById(id)){
-            seatRepository.deleteById(id);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", null));
+    public ResponseEntity<ResponseObject<DetailResponse<Food>>> delete(@PathVariable Long id, HttpServletRequest request){
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
+        if(seatRepository.existsByIdAndDeleted(id, false)){
+            Seat seat = seatRepository.findById(id).orElse(null);
+            seat.setDeleted(true);
+            seat.setUpdatedBy(userReq);
+            seat.setUpdatedAt(LocalDateTime.now());
+            seatRepository.save(seat);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",null));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+    }
+    @PatchMapping("/{id}")
+    public  ResponseEntity<ResponseObject<Seat>> restore(@PathVariable Long id, HttpServletRequest request){
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+        }
+        Seat seat = seatRepository.findByIdAndDeleted(id, true).orElse(null);
+        if (seat == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+        }
+        seat.setDeleted(false);
+        seat.setUpdatedAt(LocalDateTime.now());
+        seat.setUpdatedBy(userReq);
+        seatRepository.save(seat);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",seat));
     }
 
 

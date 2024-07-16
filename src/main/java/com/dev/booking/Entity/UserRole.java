@@ -14,31 +14,16 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "user-role")
-public class UserRole {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class UserRole extends BaseEntity{
 
     @ManyToOne
     @JoinColumn(name = "userID")
-   // @JsonManagedReference("user-roles")
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "roleID")
-   // @JsonManagedReference("user-roles")
     private Role role;
 
-    private Long createdBy;
-
-
-    private Long updatedBy;
-
-    @Column(nullable = true)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
 
     // Getters and Setters
 }

@@ -23,55 +23,25 @@ public class ShowtimeService {
     @Autowired
     private ShowtimeRepository showtimeRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private JwtRequestFilter jwtRequestFilter;
-    @Autowired
     private MovieService movieService;
 
     public List<DetailResponse<Showtime>> mapToResponse(List<Showtime> showtimes) {
         return showtimes.stream().map(showtime -> {
-            UserBasicDTO createdBy = null;
-            if (showtime.getCreatedBy() != null) {
-                User user = userRepository.findById(showtime.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            UserBasicDTO updatedBy = null;
-            if (showtime.getUpdatedBy() != null) {
-                User user = userRepository.findById(showtime.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            return new DetailResponse<>(showtime, createdBy, updatedBy);
+            return new DetailResponse<>(showtime, showtime.getCreatedBy(), showtime.getUpdatedBy());
         }).collect(Collectors.toList());
     }
     public DetailResponse<Showtime> getById(Long id){
         Showtime showtime = showtimeRepository.findById(id).orElse(null);
-        UserBasicDTO createdBy = null;
-        if(showtime != null && showtime.getCreatedBy() != null){
-            User user = userRepository.findById(showtime.getCreatedBy()).orElse(null);
-            if (user != null) {
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-        }
-        UserBasicDTO updatedBy = null;
-        if(showtime != null && showtime.getUpdatedBy() != null){
-            User user = userRepository.findById(showtime.getUpdatedBy()).orElse(null);
-            if (user != null) {
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-        }
-        return new DetailResponse<>(showtime, createdBy, updatedBy);
+        return new DetailResponse<>(showtime, showtime.getCreatedBy(), showtime.getUpdatedBy());
     }
 
     public List<ShowtimeResponse> getShowtimesByDate(LocalDate date) {
         List<Object[]> results = showtimeRepository.findShowtimesByDate(date);
         List<ShowtimeResponse> responses = new ArrayList<>();
-
         for (Object[] result : results) {
             ShowtimeResponse response = new ShowtimeResponse();
             Long movieId = (Long) result[0];
             MovieResponse movie = movieService.getById(movieId);
-          //  response.setMovies(movie);
             response.setMovie(movie.getMovie());
             response.setCasts(movie.getCasts());
             response.setGenres(movie.getGenres());
@@ -85,12 +55,10 @@ public class ShowtimeService {
     private List<ShowtimeDTO> parseShowtimeList(String listColumn) {
         List<ShowtimeDTO> showtimeDtos = new ArrayList<>();
         String[] showtimes = listColumn.split("\\|");
-
         for (String showtime : showtimes) {
             String[] parts = showtime.split("-");
             Long id = Long.parseLong(parts[0]);
             String time = parts[1];
-
             showtimeDtos.add(new ShowtimeDTO(id, time));
         }
 

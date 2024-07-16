@@ -14,10 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "movie")
-public class Movie  implements BaseEntity{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Movie  extends BaseEntity{
 
     @Column(nullable = false)
     private String name;
@@ -44,54 +41,29 @@ public class Movie  implements BaseEntity{
     private boolean deleted = false;
 
     @JsonIgnore
-    private Long createdBy;
-
-    @JsonIgnore
-    private Long updatedBy;
-
-    @Column(nullable = true)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
-
-    @JsonIgnore
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     @OnDelete(action = OnDeleteAction.CASCADE)
-   // @JsonBackReference("movie-genres-movie")
     private Set<MovieGenre> movieGenres;
+
     @JsonIgnore
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     @OnDelete(action = OnDeleteAction.CASCADE)
-   // @JsonBackReference("movie-casts-movie")
     private Set<MovieCast> movieCasts;
+
     @JsonIgnore
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
-   // @OnDelete(action = OnDeleteAction.CASCADE)
-    //@JsonBackReference("movie-showtimes")
     private Set<Showtime> showtimes;
 
-    public Movie(Long movieId, String movieName, LocalDateTime release, byte[] image, String overview, String trailer, Integer duration, LocalDateTime createdAt, Long createdBy, LocalDateTime updatedAt, Long updatedBy) {
-        this.id = movieId;
+    public Movie(Long movieId, String movieName, LocalDateTime release, byte[] image, String overview, String trailer, Integer duration, LocalDateTime createdAt, User createdBy, LocalDateTime updatedAt, User updatedBy) {
+        super(movieId,createdBy, updatedBy,createdAt, updatedAt);
         this.name = movieName;
         this.releaseDate = release;
         this.image = image;
         this.overview = overview;
         this.trailer = trailer;
         this.duration = duration;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.updatedAt = updatedAt;
-        this.updatedBy = updatedBy;
     }
 
-//    @OneToMany(mappedBy = "movie")
-//    @JsonBackReference
-//    private Set<MovieGenre> movieGenres = new HashSet<>();
-//
-//    @OneToMany(mappedBy = "movie")
-//    @JsonBackReference
-//    private Set<MovieCast> movieCasts = new HashSet<>();
 
     // Getters and setters
 }

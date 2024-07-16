@@ -16,7 +16,7 @@ import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.MovieCastService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/movie-cast")
+@RequestMapping("/api/v1/movie-casts")
 public class MovieCastController {
     @Autowired
     private MovieCastRepository movieCastRepository;
@@ -41,9 +41,15 @@ public class MovieCastController {
 
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject<List<DetailResponse<MovieCast>>>> getAll(){
-        List<MovieCast> movieCasts = movieCastRepository.findAll();
-        List<DetailResponse<MovieCast>> responses =mappingService.mapToResponse(movieCasts);
+    public ResponseEntity<ResponseObject<Page<DetailResponse<MovieCast>>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+
+        Page<MovieCast> movieCasts = movieCastRepository.findAll(pageable);
+        Page<DetailResponse<MovieCast>> responses =mappingService.mapToResponse(movieCasts);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
     @PostMapping("/movie")

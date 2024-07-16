@@ -16,7 +16,7 @@ import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.MovieGenreService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/v1/movie-genre")
+@RequestMapping("api/v1/movie-genres")
 public class MovieGenreController {
     @Autowired
     private MovieGenreRepository movieGenreRepository;
@@ -33,43 +33,35 @@ public class MovieGenreController {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private MovieRepository movieRepository;
     @Autowired
     private MappingService mappingService;
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject<List<DetailResponse<MovieGenre>>>> getAll(){
-        List<MovieGenre> movieGenres = movieGenreRepository.findAll();
-        List<DetailResponse<MovieGenre>> responses = mappingService.mapToResponse(movieGenres);
+    public ResponseEntity<ResponseObject<Page<DetailResponse<MovieGenre>>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+
+        Page<MovieGenre> movieGenres = movieGenreRepository.findAll(pageable);
+        Page<DetailResponse<MovieGenre>> responses = mappingService.mapToResponse(movieGenres);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
-    @GetMapping("/movie")
-    public ResponseEntity<ResponseObject<List<DetailResponse<MovieGenre>>>> getAll(@RequestBody Movie movie){
-        if(movie.getId() == null || !movieRepository.existsById(movie.getId()))
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("movieId does not exist",null));
-        List<MovieGenre> movieGenres = movieGenreRepository.findByMovie(movie);
-        List<DetailResponse<MovieGenre>> responses = mappingService.mapToResponse(movieGenres);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
-    }
+//    @GetMapping("/movie")
+//    public ResponseEntity<ResponseObject<List<DetailResponse<MovieGenre>>>> getAll(@RequestBody Movie movie){
+//        if(movie.getId() == null || !movieRepository.existsById(movie.getId()))
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("movieId does not exist",null));
+//        List<MovieGenre> movieGenres = movieGenreRepository.findByMovie(movie);
+//        List<DetailResponse<MovieGenre>> responses = mappingService.mapToResponse(movieGenres);
+//        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
+//    }
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<MovieGenre>>> getById(@PathVariable Long id){
         if(movieGenreRepository.existsById(id)){
             MovieGenre movieGenre = movieGenreRepository.findById(id).orElse(null);
-            UserBasicDTO createdBy = null;
-            UserBasicDTO updatedBy = null;
-            if(movieGenre != null && movieGenre.getCreatedBy() != null){
-                User user = userRepository.findById(movieGenre.getCreatedBy()).orElse(null);
-                if(user != null)
-                    createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            if(movieGenre != null && movieGenre.getUpdatedBy() != null){
-                User user = userRepository.findById(movieGenre.getUpdatedBy()).orElse(null);
-                if(user != null)
-                    updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            DetailResponse<MovieGenre> response = new DetailResponse<>(movieGenre, createdBy, updatedBy);
+            DetailResponse<MovieGenre> response = new DetailResponse<>(movieGenre, movieGenre.getCreatedBy(), movieGenre.getUpdatedBy());
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));

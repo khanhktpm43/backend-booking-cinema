@@ -18,20 +18,4 @@ public class GenreService {
     private UserRepository userRepository;
 
 
-    public List<DetailResponse<Genre>> mapGenreToResponse(List<Genre> genres){
-        List<DetailResponse<Genre>> result = genres.stream().map(genre -> {
-            UserBasicDTO createdBy = null;
-            if (genre.getCreatedBy() != null) {
-                User user = userRepository.findById(genre.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            UserBasicDTO updatedBy = null;
-            if (genre.getUpdatedBy() != null) {
-                User user = userRepository.findById(genre.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            return new DetailResponse<>(genre, createdBy, updatedBy);
-        }).collect(Collectors.toList());
-        return result;
-    }
 }

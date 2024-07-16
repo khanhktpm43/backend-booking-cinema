@@ -15,10 +15,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Table(name = "user")
 
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class User  extends BaseEntity{
 
     @Column(nullable = false)
     private String name;
@@ -36,39 +33,15 @@ public class User {
     private String passWord;
 
     @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "createdBy")
-    private User createdBy;
-
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "updatedBy")
-    private User updatedBy;
-
-    @Column(nullable = true)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
-
-    @JsonIgnore
-//    @OneToMany(mappedBy = "createdBy")
-@OneToMany(mappedBy = "createdBy",fetch = FetchType.LAZY)
-//@JsonIgnoreProperties({"createdBy"})
+    @OneToMany(mappedBy = "createdBy",fetch = FetchType.LAZY)
     private Set<User> createdUsers;
 
     @JsonIgnore
     @OneToMany(mappedBy = "updatedBy",fetch = FetchType.LAZY)
     private Set<User> updatedUsers;
 
-//    @JsonIgnore
-//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
-//  //  @JsonBackReference("user-roles")
-//    private Set<UserRole> userRoles;
-
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
- //   @JsonBackReference("user-bookings")
     private Set<Booking> bookings;
 
 
@@ -83,15 +56,14 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                "id=" + id +
+                "id=" + super.getId() +
                 ", name='" + name + '\'' +
                 ", userName='" + userName + '\'' +
                 ", phone='" + phone + '\'' +
                 ", email='" + email + '\'' +
                 ", passWord='" + passWord + '\'' +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
+                ", createdAt=" +super.getCreatedAt() +
+                ", updatedAt=" + super.getUpdatedAt() +
                 '}';
     }
-// Getters and Setters
 }

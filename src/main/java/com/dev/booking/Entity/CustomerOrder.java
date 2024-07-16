@@ -14,19 +14,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "customer-order")
-public class CustomerOrder {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class CustomerOrder extends BaseEntity{
 
     @ManyToOne
     @JoinColumn(name = "bookingID")
-   // @JsonManagedReference("booking-orders")
     private Booking booking;
 
     @ManyToOne
     @JoinColumn(name = "foodID")
-   // @JsonManagedReference("food-orders")
     private Food food;
 
     @Column(nullable = false)
@@ -36,16 +31,8 @@ public class CustomerOrder {
     private float price;
 
     @JsonIgnore
-    private Long createdBy;
+    private boolean deleted = false;
 
-    @JsonIgnore
-    private Long updatedBy;
-
-    @Column(nullable = true)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
 
     // Getters and Setters
 }

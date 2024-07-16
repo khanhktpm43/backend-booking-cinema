@@ -19,6 +19,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -55,15 +57,13 @@ public class UserService {
 
         User user = new User(request.getName(), request.getUserName(), request.getEmail(), request.getPhone(),passwordEncoder.encode(request.getPassWord()));
         user.setCreatedAt(LocalDateTime.now());
-      //  user.setUpdatedAt(LocalDateTime.now());
         User user1 = userRepository.save(user);
         user1.setCreatedBy(user1);
-
         userRepository.save(user1);
             Role roleDefault = roleRepository.getByCode("ROLE_GUEST");
             UserRole userRole = new UserRole();
             userRole.setUser(user);
-            userRole.setRole(roleDefault); userRole.setCreatedBy(user1.getId());
+            userRole.setRole(roleDefault); userRole.setCreatedBy(user1);
             userRole.setCreatedAt(LocalDateTime.now());
             userRole.setUpdatedAt(null);
             userRoleRepository.save(userRole);
@@ -72,7 +72,7 @@ public class UserService {
             return tokenDTO;
 
     }catch (DataIntegrityViolationException e) {
-        // In ra stack trace để debug
+
         TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
         String errorMessage = "Lỗi: thông tin đã tồn tại trong hệ thống.";
         return null;
@@ -87,11 +87,8 @@ public class UserService {
             List<Role> roles = new ArrayList<>();
             User user = new User(createUserRequest.getUser().getName(), createUserRequest.getUser().getUserName(), createUserRequest.getUser().getEmail(), createUserRequest.getUser().getPhone(),passwordEncoder.encode(createUserRequest.getUser().getPassWord()));
             user.setCreatedAt(LocalDateTime.now());
-           // user.setUpdatedAt(LocalDateTime.now());
             user.setCreatedBy(userReq);
             User user1 = userRepository.save(user);
-
-
             UserBasicDTO createdBy =new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
 
             if( createUserRequest.getRoles().isEmpty()){
@@ -99,7 +96,7 @@ public class UserService {
                 UserRole userRole = new UserRole();
                 userRole.setUser(user1);
                 userRole.setRole(roleDefault);
-                userRole.setCreatedBy(userReq.getId());
+                userRole.setCreatedBy(userReq);
                 userRole.setCreatedAt(LocalDateTime.now());
                 roles.add(roleDefault);
                 userRoleRepository.save(userRole);
@@ -113,7 +110,7 @@ public class UserService {
                     UserRole userRole = new UserRole();
                     userRole.setUser(user);
                     userRole.setRole(role);
-                    userRole.setCreatedBy(userReq.getId());
+                    userRole.setCreatedBy(userReq);
                     userRole.setCreatedAt(LocalDateTime.now());
                     userRoleRepository.save(userRole);
                 }
@@ -164,17 +161,12 @@ public class UserService {
                         .orElseThrow(() -> new UsernameNotFoundException("User not found "));
                 UserBasicDTO createdBy = convertToCreatedBasicDto(user);
                 UserBasicDTO updateBy = convertToUpdatedBasicDto(user);
-
-
-                // Tìm danh sách UserRole của User
                 List<UserRole> userRoles = userRoleRepository.findByUser(user);
-
                 // Chuyển đổi UserRole sang Role và thu thập vào danh sách roles
                 List<Role> roles = userRoles.stream()
                         .map(userRole -> roleRepository.findById(userRole.getRole().getId())
                                 .orElseThrow(() -> new IllegalStateException("Role not found")))
                         .collect(Collectors.toList());
-
                 // Trả về đối tượng MyUserDetails
                 return new UserDetailResponse(user, createdBy, updateBy, roles);
             }
@@ -185,18 +177,18 @@ public class UserService {
 
     }
 
-    public List<UserDetailResponse> getAll(){
-            List<User> users = userRepository.findAll();
-            return users.stream().map(user -> {
-                UserBasicDTO cretedBy = convertToCreatedBasicDto(user);
-                UserBasicDTO updatedBy = convertToUpdatedBasicDto(user);
-                List<Role> roles = userRoleRepository.findByUser(user)
-                        .stream()
-                        .map(UserRole::getRole)
-                        .collect(Collectors.toList());
-                return new UserDetailResponse(user,cretedBy,updatedBy, roles);
-            }).collect(Collectors.toList());
+    public Page<UserDetailResponse> getAll(Pageable pageable){
+        Page<User> usersPage = userRepository.findAll(pageable);
 
+        return usersPage.map(user -> {
+            UserBasicDTO createdBy = convertToCreatedBasicDto(user);
+            UserBasicDTO updatedBy = convertToUpdatedBasicDto(user);
+            List<Role> roles = userRoleRepository.findByUser(user)
+                    .stream()
+                    .map(UserRole::getRole)
+                    .collect(Collectors.toList());
+            return new UserDetailResponse(user, createdBy, updatedBy, roles);
+        });
     }
     public UserBasicDTO convertToCreatedBasicDto(User user) {
         if (user == null) {

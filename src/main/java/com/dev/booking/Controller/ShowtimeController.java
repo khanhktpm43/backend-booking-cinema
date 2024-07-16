@@ -1,9 +1,6 @@
 package com.dev.booking.Controller;
 
-import com.dev.booking.Entity.Movie;
-import com.dev.booking.Entity.SeatPrice;
-import com.dev.booking.Entity.Showtime;
-import com.dev.booking.Entity.User;
+import com.dev.booking.Entity.*;
 import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.MovieRepository;
 import com.dev.booking.Repository.ShowtimeRepository;
@@ -12,9 +9,14 @@ import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.ShowtimeResponse;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
+import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.ShowtimeService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +27,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/v1/showtime")
+@RequestMapping("api/v1/showtimes")
 public class ShowtimeController {
     @Autowired
     private ShowtimeRepository showtimeRepository;
@@ -37,17 +39,30 @@ public class ShowtimeController {
     private ShowtimeService showtimeService;
     @Autowired
     private MovieRepository movieRepository;
+    @Autowired
+    private MappingService mappingService;
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject<List<DetailResponse<Showtime>>>> getAll(){
-        List<Showtime> showtimes = showtimeRepository.findByDeleted(false);
-        List<DetailResponse<Showtime>> responses = showtimeService.mapToResponse(showtimes);
+    public ResponseEntity<ResponseObject<Page<DetailResponse<Showtime>>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+
+        Page<Showtime> showtimes = showtimeRepository.findByDeleted(false, pageable);
+        Page<DetailResponse<Showtime>> responses = mappingService.mapToResponse(showtimes);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
     @GetMapping("/deleted")
-    public ResponseEntity<ResponseObject<List<DetailResponse<Showtime>>>> getAllByDeleted(){
-        List<Showtime> showtimes = showtimeRepository.findByDeleted(true);
-        List<DetailResponse<Showtime>> responses = showtimeService.mapToResponse(showtimes);
+    public ResponseEntity<ResponseObject<Page<DetailResponse<Showtime>>>> getAllByDeleted(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+        Page<Showtime> showtimes = showtimeRepository.findByDeleted(true, pageable);
+        Page<DetailResponse<Showtime>> responses = mappingService.mapToResponse(showtimes);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
     @GetMapping("/{id}")
@@ -73,12 +88,11 @@ public class ShowtimeController {
             if(movieRepository.existsByIdAndDeleted(showtime.getMovie().getId(),false))
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("movie has been deleted", null));
             showtime.setId(null);
-            showtime.setCreatedBy(userReq.getId());
+            showtime.setCreatedBy(userReq);
             showtime.setCreatedAt(LocalDateTime.now());
             showtime.setUpdatedAt(null);
             Showtime showtime1 = showtimeRepository.save(showtime);
-            UserBasicDTO createdBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-            DetailResponse<Showtime> response = new DetailResponse<>(showtime1, createdBy, null);
+            DetailResponse<Showtime> response = new DetailResponse<>(showtime1, showtime1.getCreatedBy(), null);
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("invalid", null));
@@ -95,16 +109,11 @@ public class ShowtimeController {
             Showtime showtime1 = showtimeRepository.findById(id).orElse(null);
             if(showtime1 != null){
                 showtime.setUpdatedAt(LocalDateTime.now());
-                showtime.setUpdatedBy(userReq.getId());
+                showtime.setUpdatedBy(userReq);
                 showtime.setCreatedAt(showtime1.getCreatedAt());
                 showtime.setCreatedBy(showtime1.getCreatedBy());
                 Showtime showtime2 =  showtimeRepository.save(showtime);
-                UserBasicDTO createdBy = null;
-                User user = userRepository.findById(showtime2.getCreatedBy()).orElse(null);
-                if(user != null)
-                    createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-                UserBasicDTO updatedBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-                DetailResponse<Showtime> response = new DetailResponse<>(showtime2, createdBy, updatedBy);
+                DetailResponse<Showtime> response = new DetailResponse<>(showtime2, showtime2.getCreatedBy(), showtime2.getUpdatedBy());
                 return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
             }
 
@@ -123,7 +132,7 @@ public class ShowtimeController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("Cannot delete expired showtime", null));
             showtime.setDeleted(true);
             showtime.setUpdatedAt(LocalDateTime.now());
-            showtime.setUpdatedBy(userReq.getId());
+            showtime.setUpdatedBy(userReq);
             showtimeRepository.save(showtime);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", null));
         }
@@ -141,7 +150,7 @@ public class ShowtimeController {
         }
         showtime.setDeleted(false);
         showtime.setUpdatedAt(LocalDateTime.now());
-        showtime.setUpdatedBy(userReq.getId());
+        showtime.setUpdatedBy(userReq);
         showtimeRepository.save(showtime);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",showtime));
     }

@@ -1,6 +1,7 @@
 package com.dev.booking.Controller;
 
 import com.dev.booking.Entity.Seat;
+import com.dev.booking.Entity.Showtime;
 import com.dev.booking.Entity.SpecialDay;
 import com.dev.booking.Entity.User;
 import com.dev.booking.JWT.JwtRequestFilter;
@@ -13,7 +14,7 @@ import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.SpecialDayService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,31 +24,37 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("api/v1/special-day")
+@RequestMapping("api/v1/special-days")
 public class SpecialDayController {
     @Autowired
     private SpecialDayRepository specialDayRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private JwtRequestFilter jwtRequestFilter;
     @Autowired
-    private SpecialDayService specialDayService;
-    @Autowired
     private MappingService mappingService;
-
     @GetMapping("")
-    public ResponseEntity<ResponseObject<List<DetailResponse<SpecialDay>>>> getAll(){
-        List<SpecialDay> specialDays = specialDayRepository.findAll();
-        List<DetailResponse<SpecialDay>> result = mappingService.mapToResponse(specialDays);
+    public ResponseEntity<ResponseObject<Page<DetailResponse<SpecialDay>>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+        Page<SpecialDay> specialDays = specialDayRepository.findAll(pageable);
+        Page<DetailResponse<SpecialDay>> result = mappingService.mapToResponse(specialDays);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
     @GetMapping("/month-year")
-    public ResponseEntity<ResponseObject<List<DetailResponse<SpecialDay>>>> getByMonthAndYear(
+    public ResponseEntity<ResponseObject<Page<DetailResponse<SpecialDay>>>> getByMonthAndYear(
             @RequestParam int month,
-            @RequestParam int year){
-        List<SpecialDay> specialDays = specialDayRepository.findByMothAndYear(month, year);
-        List<DetailResponse<SpecialDay>> result = mappingService.mapToResponse(specialDays);
+            @RequestParam int year,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "start,asc") String[] sort
+    ){
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+        Page<SpecialDay> specialDays = specialDayRepository.findByMothAndYear(month, year, pageable);
+        Page<DetailResponse<SpecialDay>> result = mappingService.mapToResponse(specialDays);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
 
@@ -73,12 +80,12 @@ public class SpecialDayController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
         }
         specialDay.setId(null);
-        specialDay.setCreatedBy(userReq.getId());
+        specialDay.setCreatedBy(userReq);
         specialDay.setCreatedAt(LocalDateTime.now());
         specialDay.setUpdatedAt(null);
         SpecialDay newSpecialDay = specialDayRepository.save(specialDay);
-        UserBasicDTO createdBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-        DetailResponse<SpecialDay> response = new DetailResponse<>(newSpecialDay, createdBy, null);
+
+        DetailResponse<SpecialDay> response = new DetailResponse<>(newSpecialDay, newSpecialDay.getCreatedBy(), null);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
 
@@ -95,12 +102,10 @@ public class SpecialDayController {
             day.setStart(specialDay.getStart());
             day.setEnd(specialDay.getEnd());
             day.setUpdatedAt(LocalDateTime.now());
-            day.setUpdatedBy(userReq.getId());
+            day.setUpdatedBy(userReq);
             SpecialDay newday = specialDayRepository.save(day);
-            User user = userRepository.findById(newday.getCreatedBy()).orElse(null);
-            UserBasicDTO createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            UserBasicDTO updatedBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-            DetailResponse<SpecialDay> response = new DetailResponse<>(newday, createdBy, updatedBy);
+//
+            DetailResponse<SpecialDay> response = new DetailResponse<>(newday, newday.getCreatedBy(), newday.getUpdatedBy());
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));

@@ -21,13 +21,8 @@ import java.util.Map;
 
 @Service
 public class AuthService {
-
-    @Autowired
-    private UserRepository userRepository;
     @Autowired
     private MyUserDetailsService userDetailsService;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired

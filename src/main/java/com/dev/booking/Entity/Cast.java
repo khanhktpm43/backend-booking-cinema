@@ -16,25 +16,11 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "cast")
-public class Cast implements BaseEntity{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Cast extends BaseEntity{
 
     @Column(nullable = false)
     private String name;
 
-    @JsonIgnore
-    private Long createdBy;
-
-    @JsonIgnore
-    private Long updatedBy;
-
-    @Column(nullable = true)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
     @OneToMany(mappedBy = "cast", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Set<MovieCast> movieCasts;

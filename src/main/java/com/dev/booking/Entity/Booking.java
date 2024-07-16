@@ -18,14 +18,10 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "booking")
-public class Booking {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Booking extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "userID")
-   // @JsonManagedReference("user-bookings")
     private User user;
 
     @Column(nullable = false)
@@ -33,24 +29,17 @@ public class Booking {
 
     @Column(nullable = false)
     private float totalPrice;
-    @JsonIgnore
-    private Long createdBy;
 
     @JsonIgnore
-    private Long updatedBy;
+    private boolean deleted = false;
 
-    @Column(nullable = true)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
-@JsonIgnore
+    @JsonIgnore
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
-  //  @JsonBackReference("booking-tickets")
+    //  @JsonBackReference("booking-tickets")
     private Set<Ticket> tickets;
-@JsonIgnore
+    @JsonIgnore
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
-  //  @JsonBackReference("booking-orders")
+    //  @JsonBackReference("booking-orders")
     private Set<CustomerOrder> customerOrders;
 
     // Getters and Setters

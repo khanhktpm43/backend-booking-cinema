@@ -22,8 +22,6 @@ import java.util.stream.Collectors;
 @Service
 public class MovieCastService {
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private JwtRequestFilter jwtRequestFilter;
     @Autowired
     private MovieRepository movieRepository;
@@ -33,17 +31,7 @@ public class MovieCastService {
     private MovieCastRepository movieCastRepository;
     public List<DetailResponse<MovieCast>> mapMovieCastToResponse(List<MovieCast> movieCasts) {
         return movieCasts.stream().map(movieCast -> {
-            UserBasicDTO createdBy = null;
-            if (movieCast.getCreatedBy() != null) {
-                User user = userRepository.findById(movieCast.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            UserBasicDTO updatedBy = null;
-            if (movieCast.getUpdatedBy() != null) {
-                User user = userRepository.findById(movieCast.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            return new DetailResponse<>(movieCast, createdBy, updatedBy);
+            return new DetailResponse<>(movieCast, movieCast.getCreatedBy(), movieCast.getUpdatedBy());
         }).collect(Collectors.toList());
     }
 
@@ -56,7 +44,6 @@ public class MovieCastService {
         if (movie == null) {
             return null;
         }
-
         for (CastDTO castDTO : movieCastDTO.getCasts()) {
             if (castDTO.getCast().getId() == null || !castRepository.existsById(castDTO.getCast().getId()) || (castDTO.getRoleCast() != 1 && castDTO.getRoleCast() != 2)) {
                 continue;
@@ -71,7 +58,7 @@ public class MovieCastService {
             movieCast.setRoleCast(castDTO.getRoleCast());
             movieCast.setCreatedAt(LocalDateTime.now());
             movieCast.setUpdatedAt(null);
-            movieCast.setCreatedBy(userReq.getId());
+            movieCast.setCreatedBy(userReq);
             movieCastRepository.save(movieCast);
         }
 
@@ -79,21 +66,7 @@ public class MovieCastService {
         if (result == null) {
             return null;
         }
-        UserBasicDTO createdBy = null;
-        UserBasicDTO updatedBy = null;
-        if (result.getCreatedBy() != null) {
-            User user = userRepository.findById(result.getCreatedBy()).orElse(null);
-            if (user != null) {
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-        }
-        if (result.getUpdatedBy() != null) {
-            User user = userRepository.findById(result.getUpdatedBy()).orElse(null);
-            if (user != null) {
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-        }
-        DetailResponse<Movie> response = new DetailResponse<>(result, createdBy, updatedBy);
+        DetailResponse<Movie> response = new DetailResponse<>(result, result.getCreatedBy(), result.getUpdatedBy());
         return response;
     }
 
@@ -104,32 +77,9 @@ public class MovieCastService {
         movieCast1.setCast(movieCast.getCast());
         movieCast1.setRoleCast(movieCast.getRoleCast());
         movieCast1.setUpdatedAt(LocalDateTime.now());
-        movieCast1.setUpdatedBy(userReq.getId());
+        movieCast1.setUpdatedBy(userReq);
         MovieCast movieCast2 = movieCastRepository.save(movieCast1);
-        UserBasicDTO createdBy = null;
-        if(movieCast2.getCreatedBy() != null && userRepository.existsById(movieCast2.getCreatedBy())){
-            User user = userRepository.findById(movieCast2.getCreatedBy()).orElse( null);
-            createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-        }
-        UserBasicDTO updatedBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-        DetailResponse<MovieCast> response = new DetailResponse<>(movieCast2, createdBy, updatedBy);
+        DetailResponse<MovieCast> response = new DetailResponse<>(movieCast2, movieCast2.getCreatedBy(), userReq);
         return response;
     }
-//
-//    public DetailResponse<MovieGenre> update(User userReq, Long id, MovieCast movieCast) {
-//        MovieGenre movieGenre1 = movieGenreRepository.findById(id).orElse(null);
-//        movieGenre1.setMovie(movieGenre.getMovie());
-//        movieGenre1.setGenre(movieGenre.getGenre());
-//        movieGenre1.setUpdatedAt(LocalDateTime.now());
-//        movieGenre1.setUpdatedBy(userReq.getId());
-//        MovieGenre movieGenre2 = movieGenreRepository.save(movieGenre1);
-//        UserBasicDTO createdBy = null;
-//        if(movieGenre2.getCreatedBy() != null && userRepository.existsById(movieGenre2.getCreatedBy())){
-//            User user = userRepository.findById(movieGenre2.getCreatedBy()).orElse( null);
-//            createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-//        }
-//        UserBasicDTO updatedBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-//        DetailResponse<MovieGenre> response = new DetailResponse<>(movieGenre2, createdBy, updatedBy);
-//        return response;
-//    }
 }

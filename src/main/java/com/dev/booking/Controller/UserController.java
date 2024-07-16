@@ -1,8 +1,11 @@
 package com.dev.booking.Controller;
 
 import com.dev.booking.Entity.MyUserDetails;
+import com.dev.booking.Entity.User;
+import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.RequestDTO.CreateUserRequest;
+import com.dev.booking.RequestDTO.PasswordChangeDTO;
 import com.dev.booking.RequestDTO.RegisterRequest;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.TokenDTO;
@@ -11,21 +14,27 @@ import com.dev.booking.Service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("api/v1/user")
+@RequestMapping("api/v1/users")
 
 public class UserController {
     @Autowired
     private UserRepository userRepository;
     @Autowired
     private UserService userService;
-
+    @Autowired
+    private JwtRequestFilter jwtRequestFilter;
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<UserDetailResponse>> getById(@PathVariable Long id) {
 
@@ -48,8 +57,14 @@ public class UserController {
     }
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject<List<UserDetailResponse>>> getAll() {
-        List<UserDetailResponse> responses = userService.getAll();
+    public ResponseEntity<ResponseObject<Page<UserDetailResponse>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort
+    ) {
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+        Page<UserDetailResponse> responses = userService.getAll(pageable);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
 
@@ -61,7 +76,6 @@ public class UserController {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<TokenDTO>("username, phone or email already exists in the system", null));
     }
-
     @PostMapping("/create")
     public ResponseEntity<ResponseObject<UserDetailResponse>> create(HttpServletRequest request, @RequestBody CreateUserRequest createUserRequest) {
         UserDetailResponse userDetailResponse = userService.create(request, createUserRequest);
@@ -69,5 +83,34 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", userDetailResponse));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("username, phone or email already exists in the system", null));
     }
-
+    @PatchMapping("/change-password")
+    public ResponseEntity<ResponseObject<User>> changePassword(@RequestBody PasswordChangeDTO passwordChangeDTO, HttpServletRequest request){
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+        }
+        if(!new BCryptPasswordEncoder().matches(passwordChangeDTO.getCurrentPassword(), userReq.getPassWord()))
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("Current password is incorrect",null));
+        if (!passwordChangeDTO.getNewPassword().equals(passwordChangeDTO.getConfirmNewPassword())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("New passwords do not match",null));
+        }
+        userReq.setPassWord(new BCryptPasswordEncoder().encode(passwordChangeDTO.getNewPassword()));
+        User user = userRepository.save(userReq);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", user));
+    }
+    @PatchMapping("/change-password1")
+    public ResponseEntity<ResponseObject<User>> changePassword1(@RequestBody PasswordChangeDTO passwordChangeDTO, HttpServletRequest request){
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+        }
+        if(!new BCryptPasswordEncoder().matches(passwordChangeDTO.getCurrentPassword(), userReq.getPassWord()))
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("Current password is incorrect",null));
+        if (!passwordChangeDTO.getNewPassword().equals(passwordChangeDTO.getConfirmNewPassword())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("New passwords do not match",null));
+        }
+        userReq.setPassWord(new BCryptPasswordEncoder().encode(passwordChangeDTO.getNewPassword()));
+        User user = userRepository.save(userReq);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", user));
+    }
 }

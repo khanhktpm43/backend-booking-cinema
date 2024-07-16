@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("api/v1/user-role")
+@RequestMapping("api/v1/user-roles")
 public class UserRoleController {
     @Autowired
     private UserRoleRepository userRoleRepository;
@@ -35,7 +35,6 @@ public class UserRoleController {
     private UserRepository userRepository;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
-
     @PostMapping("/")
     public ResponseEntity<ResponseObject<UserDetailResponse>> assignRole(@RequestBody UserRoleRequest request , HttpServletRequest httpRequest){
         User userReq = jwtRequestFilter.getUserRequest(httpRequest);
@@ -56,11 +55,10 @@ public class UserRoleController {
                     UserRole userRole = new UserRole();
                     userRole.setUser(request.getUser());
                     userRole.setRole(role);
-                    userRole.setCreatedBy(userReq.getId());
+                    userRole.setCreatedBy(userReq);
                     userRole.setCreatedAt(LocalDateTime.now());
                     Example<UserRole> userRoleExample = Example.of(userRole);
                     if(userRoleRepository.exists(userRoleExample)){
-                      //  return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("UserRole"+userRoleExample.toString()+"  existed",null));
                         continue;
                     }
                 userRoleRepository.save(userRole);
@@ -77,13 +75,11 @@ public class UserRoleController {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("User not exist",null));
     }
-
     @DeleteMapping ("/{id}")
     ResponseEntity<ResponseObject<UserDetailResponse>> removeRole(@PathVariable Long id){
         if(userRoleRepository.existsById(id)){
             userRoleRepository.deleteById(id);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",null));
-
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
 

@@ -14,6 +14,10 @@ import com.dev.booking.Service.CastService;
 import com.dev.booking.Service.MappingService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,25 +27,27 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/v1/cast")
+@RequestMapping("api/v1/casts")
 public class CastController {
     @Autowired
     private CastRepository castRepository;
     @Autowired
     private MovieCastRepository movieCastRepository;
     @Autowired
-    private CastService castService;
-    @Autowired
     private MappingService mappingService;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
-    @Autowired
-    private UserRepository userRepository;
+
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject<List<DetailResponse<Cast>>>> getAll() {
-        List<Cast> casts = castRepository.findAll();
-        List<DetailResponse<Cast>> responses = mappingService.mapToResponse(casts);
+    public ResponseEntity<ResponseObject<Page<DetailResponse<Cast>>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort) {
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+        Page<Cast> casts = castRepository.findAll(pageable);
+        Page<DetailResponse<Cast>> responses = mappingService.mapToResponse(casts);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
     @GetMapping("/{id}")
@@ -61,11 +67,11 @@ public class CastController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
         cast.setId(null);
         cast.setCreatedAt(LocalDateTime.now());
-        cast.setCreatedBy(userReq.getId());
+        cast.setCreatedBy(userReq);
         cast.setUpdatedAt(null);
         Cast newCast = castRepository.save(cast);
-        UserBasicDTO createdBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-        DetailResponse<Cast> response = new DetailResponse<>(newCast, createdBy, null);
+
+        DetailResponse<Cast> response = new DetailResponse<>(newCast, newCast.getCreatedBy(), null);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
 
     }
@@ -77,7 +83,7 @@ public class CastController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
         if (castRepository.existsById(id)) {
             Cast cast1 = castRepository.findById(id).orElse(null);
-            cast1.setUpdatedBy(userReq.getId());
+            cast1.setUpdatedBy(userReq);
             cast1.setUpdatedAt(LocalDateTime.now());
             cast1.setName(cast.getName());
             Cast newCast = castRepository.save(cast1);

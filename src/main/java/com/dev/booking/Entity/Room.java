@@ -14,10 +14,8 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "room")
-public class Room  implements BaseEntity{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Room  extends BaseEntity{
+
 
     @Column(nullable = false, unique = true)
     private String code;
@@ -31,17 +29,17 @@ public class Room  implements BaseEntity{
 
 
 
-    @JsonIgnore
-    private Long createdBy;
-
-    @JsonIgnore
-    private Long updatedBy;
-
-    @Column(nullable = true)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
+//    @JsonIgnore
+//    private Long createdBy;
+//
+//    @JsonIgnore
+//    private Long updatedBy;
+//
+//    @Column(nullable = true)
+//    private LocalDateTime createdAt;
+//
+//    @Column(nullable = true)
+//    private LocalDateTime updatedAt;
     @JsonIgnore
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     //@JsonBackReference("room-seats")

@@ -1,6 +1,8 @@
 package com.dev.booking.Repository;
 
 import com.dev.booking.Entity.Movie;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,7 +24,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
             nativeQuery = true)
     List<Object[]> findDetailById(@Param("movieId") Long movieId);
 
-    List<Movie> findByDeleted(boolean b);
+    Page<Movie> findByDeleted(boolean b, Pageable pageable);
 
     Optional<Movie> findByIdAndDeleted(Long id, boolean b);
 

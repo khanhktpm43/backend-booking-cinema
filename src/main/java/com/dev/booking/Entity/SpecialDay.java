@@ -14,10 +14,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "special-day")
-public class SpecialDay implements BaseEntity{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class SpecialDay extends BaseEntity{
 
     @Column(nullable = false)
     private String name;
@@ -28,17 +25,6 @@ public class SpecialDay implements BaseEntity{
     @Column(nullable = false)
     private LocalDateTime end;
 
-    @JsonIgnore
-    private Long createdBy;
-
-    @JsonIgnore
-    private Long updatedBy;
-
-    @Column(nullable = true)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
     // Getters and Setters
 }
 

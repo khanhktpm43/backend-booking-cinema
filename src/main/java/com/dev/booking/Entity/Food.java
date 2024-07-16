@@ -16,10 +16,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "food")
-public class Food implements BaseEntity{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Food extends BaseEntity{
 
     @Lob
     @Column(columnDefinition = "MEDIUMBLOB")
@@ -32,21 +29,11 @@ public class Food implements BaseEntity{
     private float price;
 
     @JsonIgnore
-    private Long createdBy;
-
-    @JsonIgnore
-    private Long updatedBy;
-
-    @Column(nullable = true)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
+    private boolean deleted = false;
 
 
     @JsonIgnore
     @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true)
- //   @JsonBackReference("food-orders")
     private Set<CustomerOrder> customerOrders;
 
     // Getters and Setters

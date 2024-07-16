@@ -20,40 +20,14 @@ public class SeatPriceService {
     private UserRepository userRepository;
     @Autowired
     private SeatPriceRepository seatPriceRepository;
-
-
     public List<DetailResponse<SeatPrice>> mapToResponse(List<SeatPrice> seatPrices){
         return seatPrices.stream().map(seatPrice -> {
-            UserBasicDTO createdBy = null;
-            if (seatPrice.getCreatedBy() != null) {
-                User user = userRepository.findById(seatPrice.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            UserBasicDTO updatedBy = null;
-            if (seatPrice.getUpdatedBy() != null) {
-                User user = userRepository.findById(seatPrice.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            return new DetailResponse<>(seatPrice, createdBy, updatedBy);
+            return new DetailResponse<>(seatPrice, seatPrice.getCreatedBy(), seatPrice.getUpdatedBy());
         }).collect(Collectors.toList());
     }
     public DetailResponse<SeatPrice> getById(Long id){
         SeatPrice seatPrice = seatPriceRepository.findById(id).orElse(null);
-        UserBasicDTO createdBy = null;
-        if(seatPrice != null && seatPrice.getCreatedBy() != null){
-            User user = userRepository.findById(seatPrice.getCreatedBy()).orElse(null);
-            if (user != null) {
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-        }
-        UserBasicDTO updatedBy = null;
-        if(seatPrice != null && seatPrice.getUpdatedBy() != null){
-            User user = userRepository.findById(seatPrice.getUpdatedBy()).orElse(null);
-            if (user != null) {
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-        }
-        return new DetailResponse<>(seatPrice, createdBy, updatedBy);
+        return new DetailResponse<>(seatPrice, seatPrice.getCreatedBy(), seatPrice.getUpdatedBy());
     }
     public boolean isValid(SeatPrice seatPrice){
         return seatPrice.isValid() && seatPriceRepository.isValid(seatPrice);

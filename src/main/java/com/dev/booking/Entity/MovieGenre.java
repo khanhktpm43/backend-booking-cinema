@@ -16,32 +16,15 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "movie_genre")
-public class MovieGenre implements BaseEntity{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class MovieGenre extends BaseEntity{
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "movie_id")
-   // @OnDelete(action = OnDeleteAction.CASCADE)
-    //@JsonManagedReference("movie-genres-movie")
     private Movie movie;
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "genre_id")
-   // @JsonManagedReference("movie-genres-genres")
     private Genre genre;
-    @JsonIgnore
-    private Long createdBy;
-
-    @JsonIgnore
-    private Long updatedBy;
-
-    @Column(nullable = true)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
 
     // Getters and setters
 }

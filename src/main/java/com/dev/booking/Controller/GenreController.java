@@ -1,6 +1,7 @@
 package com.dev.booking.Controller;
 
 import com.dev.booking.Entity.Cast;
+import com.dev.booking.Entity.Food;
 import com.dev.booking.Entity.Genre;
 import com.dev.booking.Entity.User;
 import com.dev.booking.JWT.JwtRequestFilter;
@@ -15,6 +16,10 @@ import com.dev.booking.Service.MappingService;
 import io.swagger.v3.oas.models.examples.Example;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +29,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/v1/genre")
+@RequestMapping("api/v1/genres")
 
 public class GenreController {
     @Autowired
@@ -41,9 +46,14 @@ public class GenreController {
     private JwtRequestFilter jwtRequestFilter;
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject<List<DetailResponse<Genre>>>> getAll() {
-        List<Genre> genres = genreRepository.findAll();
-        List<DetailResponse<Genre>> responses = mappingService.mapToResponse(genres);
+    public ResponseEntity<ResponseObject<Page<DetailResponse<Genre>>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+        Page<Genre> genres = genreRepository.findAll(pageable);
+        Page<DetailResponse<Genre>> responses = mappingService.mapToResponse(genres);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
 
@@ -67,11 +77,11 @@ public class GenreController {
         }
         genre.setId(null);
         genre.setCreatedAt(LocalDateTime.now());
-        genre.setCreatedBy(userReq.getId());
+        genre.setCreatedBy(userReq);
         genre.setUpdatedAt(null);
         Genre newGenre = genreRepository.save(genre);
         UserBasicDTO createdBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-        DetailResponse<Genre> response = new DetailResponse<>(newGenre, createdBy, null);
+        DetailResponse<Genre> response = new DetailResponse<>(newGenre, newGenre.getCreatedBy(), null);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
 
@@ -85,15 +95,15 @@ public class GenreController {
             Genre genre1 = genreRepository.findById(id).orElse(null);
             genre1.setName(genre.getName());
             genre1.setUpdatedAt(LocalDateTime.now());
-            genre1.setUpdatedBy(userReq.getId());
+            genre1.setUpdatedBy(userReq);
             Genre genre2 = genreRepository.save(genre1);
-            UserBasicDTO createdBy = null;
-            if (userRepository.existsById(genre1.getCreatedBy())) {
-                User user = userRepository.findById(genre1.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
+            User createdBy = null;
+            if (userRepository.existsById(genre1.getCreatedBy().getId())) {
+                 createdBy = userRepository.findById(genre1.getCreatedBy().getId()).orElse(null);
+              //  createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
             }
-            UserBasicDTO updatedBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-            DetailResponse<Genre> response = new DetailResponse<>(genre2, createdBy, updatedBy);
+          //  UserBasicDTO updatedBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
+            DetailResponse<Genre> response = new DetailResponse<>(genre2, createdBy, userReq);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));

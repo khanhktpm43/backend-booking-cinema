@@ -20,10 +20,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "showtime")
-public class Showtime {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Showtime  extends   BaseEntity{
 
     @Column(nullable = false)
     private LocalDateTime startTime;
@@ -33,32 +30,17 @@ public class Showtime {
 
     @ManyToOne()
     @JoinColumn(name = "movieID")
-   // @OnDelete(action = OnDeleteAction.CASCADE)
-   // @JsonManagedReference("movie-showtimes")
     private Movie movie;
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "roomID")
-   // @JsonManagedReference("room-showtimes")
     private Room room;
     @JsonIgnore
     private boolean deleted = false;
 
-    @JsonIgnore
-    private Long createdBy;
-
-    @JsonIgnore
-    private Long updatedBy;
-
-    @Column(nullable = true)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
 
     @JsonIgnore
     @OneToMany(mappedBy = "showtime", cascade = CascadeType.ALL, orphanRemoval = true)
-   // @JsonBackReference("showtime-tickets")
     private Set<Ticket> tickets;
 
     // Getters and Setters

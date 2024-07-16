@@ -14,23 +14,4 @@ import java.util.stream.Collectors;
 
 @Service
 public class CastService {
-    @Autowired
-    private UserRepository userRepository;
-
-
-    public List<DetailResponse<Cast>> mapGenreToResponse(List<Cast> casts){
-        return casts.stream().map(cast -> {
-            UserBasicDTO createdBy = null;
-            if (cast.getCreatedBy() != null) {
-                User user = userRepository.findById(cast.getCreatedBy()).orElse(null);
-                createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            UserBasicDTO updatedBy = null;
-            if (cast.getUpdatedBy() != null) {
-                User user = userRepository.findById(cast.getUpdatedBy()).orElse(null);
-                updatedBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-            }
-            return new DetailResponse<>(cast, createdBy, updatedBy);
-        }).collect(Collectors.toList());
-    }
 }
