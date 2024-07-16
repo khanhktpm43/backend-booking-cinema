@@ -33,8 +33,7 @@ public class ShowtimeController {
     private ShowtimeRepository showtimeRepository;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
-    @Autowired
-    private UserRepository userRepository;
+
     @Autowired
     private ShowtimeService showtimeService;
     @Autowired

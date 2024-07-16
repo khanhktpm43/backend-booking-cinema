@@ -2,6 +2,7 @@ package com.dev.booking.Controller;
 
 import com.dev.booking.Entity.Movie;
 import com.dev.booking.Entity.Room;
+import com.dev.booking.Entity.Seat;
 import com.dev.booking.Entity.User;
 import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.JWT.JwtUtil;
@@ -32,8 +33,6 @@ import java.util.stream.Collectors;
 public class RoomController {
     @Autowired
     private RoomRepository roomRepository;
-    @Autowired
-    private UserRepository userRepository;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
     @Autowired
@@ -71,9 +70,15 @@ public class RoomController {
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
-
     }
-
+    @GetMapping("/{id}/seats")
+    public  ResponseEntity<ResponseObject<List<DetailResponse<Seat>>>> getSeatByRoom(@PathVariable Long id){
+        if(!roomRepository.existsById(id))
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
+        List<Seat> sortedSeats =roomRepository.findSeatsInRoomSortedByRowAndColumn(id);
+        List<DetailResponse<Seat>> response = mappingService.mapToResponse(sortedSeats);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
+    }
     @PostMapping("")
     public ResponseEntity<ResponseObject<DetailResponse<Room>>> create(@RequestBody Room room, HttpServletRequest request) {
         Example<Room> example = Example.of(room);

@@ -20,5 +20,10 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
 
     boolean existsByIdAndDeleted(Long id, boolean b);
 
+
     Optional<Seat> findByIdAndDeleted(Long id, boolean b);
+
+    boolean existsByRoomAndRowAndColumn(Room room, String row, int column);
+
+    boolean existsByRoomAndRowAndColumnAndDeleted(Room room, String row, int column, boolean b);
 }

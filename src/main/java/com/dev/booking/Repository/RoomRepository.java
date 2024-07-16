@@ -1,9 +1,11 @@
 package com.dev.booking.Repository;
 
 import com.dev.booking.Entity.Room;
+import com.dev.booking.Entity.Seat;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,4 +18,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     boolean existsByIdAndDeleted(Long id, boolean b);
 
     Optional<Room> findByIdAndDeleted(Long id, boolean b);
+    @Query("SELECT s FROM Seat s WHERE s.room.id = :roomId ORDER BY s.row ASC, s.column ASC")
+    List<Seat> findSeatsInRoomSortedByRowAndColumn(Long roomId);
 }

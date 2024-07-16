@@ -5,6 +5,7 @@ import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.RoomRepository;
 import com.dev.booking.Repository.SeatRepository;
 import com.dev.booking.Repository.UserRepository;
+import com.dev.booking.RequestDTO.SeatDTO;
 import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
@@ -16,6 +17,9 @@ import org.springframework.data.domain.*;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -28,12 +32,14 @@ import java.util.stream.Collectors;
 public class SeatController {
     @Autowired
     private SeatRepository seatRepository;
-
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
-
+    @Autowired
+    private RoomRepository roomRepository;
     @Autowired
     private MappingService mappingService;
+    @Autowired
+    private SeatService seatService;
 
 
     @GetMapping("")
@@ -58,16 +64,12 @@ public class SeatController {
         Page<DetailResponse<Seat>> result = mappingService.mapToResponse(seats);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
-//    @GetMapping("/room/id")
-//    public ResponseEntity<ResponseObject<List<DetailResponse<Seat>>>> getByRoom(@PathVariable Long id){
-//        if(!roomRepository.existsById(id)){
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
-//        }
-//        Room room = roomRepository.findByIdAndDeleted(id,false).orElseThrow();
-//        List<Seat> seats = seatRepository.findByRoomAndDeleted(room,false);
-//        List<DetailResponse<Seat>> result = mappingService.mapToResponse(seats);
-//        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
-//    }
+    @GetMapping("/room/id")
+    public ResponseEntity<ResponseObject<List<DetailResponse<Seat>>>> getByRoom(@PathVariable Long id){
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("call api: api/v1/rooms/{id}/seats", null));
+
+    }
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Seat>>> getById(@PathVariable Long id){
         if (seatRepository.existsById(id)) {
@@ -85,9 +87,6 @@ public class SeatController {
         if (seatRepository.exists(example)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("Information already exists", null));
         }
-//        Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-//        String username = (String) tokenAndUsername.get("username");
-//        User userReq = userRepository.findByUserName(username).orElse(null);
         User userReq = jwtRequestFilter.getUserRequest(request);
         if(userReq == null){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
@@ -100,7 +99,24 @@ public class SeatController {
         DetailResponse<Seat> response = new DetailResponse<>(newSeat, newSeat.getCreatedBy(), null);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
+    @Transactional
+    @PostMapping("/room/{roomId}")
+    public ResponseEntity<ResponseObject<List<DetailResponse<Seat>>>> createSeatsByRoom(@PathVariable Long roomId, @RequestBody List<SeatDTO> seatDTOS,  HttpServletRequest request){
 
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if(userReq == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+        if(!roomRepository.existsById(roomId))
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("room not found", null));
+        if(seatDTOS.isEmpty())
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("seats is Empty", null));
+
+        Room room = roomRepository.findById(roomId).orElseThrow();
+        List<DetailResponse<Seat>> responses = seatService.createSeats(room,seatDTOS, userReq);
+        if (responses.isEmpty())
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("Seat already exists, transaction rolled back.", null));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", responses));
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Seat>>> update(@PathVariable Long id,@RequestBody Seat seat, HttpServletRequest request){

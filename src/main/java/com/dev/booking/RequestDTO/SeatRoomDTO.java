@@ -1,6 +1,6 @@
 package com.dev.booking.RequestDTO;
 
-import com.dev.booking.Entity.Ticket;
+import com.dev.booking.Entity.Room;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,8 +10,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class BookingOnlineDTO {
-    private List<TicketDTO> ticketList;
-    private List<FoodOrderDTO> foodOrderList;
-    private float totalPrice;
+public class SeatRoomDTO {
+    private Room room;
+    private List<SeatDTO> seats;
 }

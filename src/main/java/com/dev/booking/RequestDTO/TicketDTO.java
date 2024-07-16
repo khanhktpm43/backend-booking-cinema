@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TicketDTO {
-    private Showtime showtime;
     private Seat seat;
     private float price;
 }

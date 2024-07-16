@@ -25,8 +25,6 @@ public class BookingController {
     private BookingRepository bookingRepository;
     @Autowired
     private MappingService mappingService;
-    @Autowired
-    private JwtRequestFilter jwtRequestFilter;
 
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Booking>>>> getAll(
