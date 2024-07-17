@@ -25,9 +25,9 @@ public class Booking extends BaseEntity {
     private User user;
 
     @Column(nullable = false)
-    private Date bookingDate;
+    private LocalDateTime bookingDate;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private float totalPrice;
 
     @JsonIgnore

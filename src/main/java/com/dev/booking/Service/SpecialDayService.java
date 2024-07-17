@@ -28,12 +28,14 @@ public class SpecialDayService {
         if(specialDayRepository.isSpecialDay(showtime) == 1){
             return 1;
         }
-        DayOfWeek dayOfWeek = showtime.getStartTime().getDayOfWeek();
-        // Kiểm tra nếu ngày là Thứ Bảy hoặc Chủ Nhật
-        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+        if(showtime.getStartTime().isBefore(showtime.getMovie().getReleaseDate())){
             return 3;
-        } else {
+        }
+        DayOfWeek dayOfWeek = showtime.getStartTime().getDayOfWeek();
+        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
             return 5;
+        } else {
+            return 7;
         }
     }
 }

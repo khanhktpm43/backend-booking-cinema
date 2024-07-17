@@ -18,11 +18,11 @@ import java.time.LocalDateTime;
 @Table(name = "movie_genre")
 public class MovieGenre extends BaseEntity{
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne()
     @JoinColumn(name = "movie_id")
     private Movie movie;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne()
     @JoinColumn(name = "genre_id")
     private Genre genre;
 

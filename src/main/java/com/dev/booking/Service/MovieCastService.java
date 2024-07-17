@@ -71,11 +71,12 @@ public class MovieCastService {
     }
 
 
-    public DetailResponse<MovieCast> update(User userReq, Long id, MovieCast movieCast) {
+    public DetailResponse<MovieCast> update(User userReq, Long id, CastDTO castDTO) {
         MovieCast movieCast1 = movieCastRepository.findById(id).orElse(null);
-        movieCast1.setMovie(movieCast.getMovie());
-        movieCast1.setCast(movieCast.getCast());
-        movieCast1.setRoleCast(movieCast.getRoleCast());
+
+
+        movieCast1.setCast(castDTO.getCast());
+        movieCast1.setRoleCast(castDTO.getRoleCast());
         movieCast1.setUpdatedAt(LocalDateTime.now());
         movieCast1.setUpdatedBy(userReq);
         MovieCast movieCast2 = movieCastRepository.save(movieCast1);

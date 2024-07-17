@@ -61,10 +61,10 @@ public class MovieGenreService {
         return response;
     }
 
-    public DetailResponse<MovieGenre> update(User userReq, Long id, MovieGenre movieGenre) {
+    public DetailResponse<MovieGenre> update(User userReq, Long id, Genre genre) {
         MovieGenre movieGenre1 = movieGenreRepository.findById(id).orElse(null);
-        movieGenre1.setMovie(movieGenre.getMovie());
-        movieGenre1.setGenre(movieGenre.getGenre());
+       // movieGenre1.setMovie(movieGenre.getMovie());
+        movieGenre1.setGenre(genre);
         movieGenre1.setUpdatedAt(LocalDateTime.now());
         movieGenre1.setUpdatedBy(userReq);
         MovieGenre movieGenre2 = movieGenreRepository.save(movieGenre1);

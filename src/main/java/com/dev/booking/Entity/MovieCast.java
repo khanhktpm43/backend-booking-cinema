@@ -19,11 +19,11 @@ import java.time.LocalDateTime;
 public class MovieCast extends BaseEntity{
 
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne()
     @JoinColumn(name = "movie_id")
     private Movie movie;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne()
     @JoinColumn(name = "cast_id")
     private Cast cast;
 

@@ -65,14 +65,9 @@ public class SeatPriceController {
             if(userReq == null){
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
             }
-//            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-//            LocalDateTime start = LocalDateTime.parse(seatPrice.getStartDate().toString(), formatter);
-//            LocalDateTime end = LocalDateTime.parse(seatPrice.getEndDate().toString(), formatter);
             seatPrice.setId(null);
             seatPrice.setCreatedBy(userReq);
             seatPrice.setCreatedAt(LocalDateTime.now());
-//            seatPrice.setStartDate(start);
-//            seatPrice.setEndDate(end);
             seatPrice.setUpdatedAt(null);
             SeatPrice seatPrice1 = seatPriceRepository.save(seatPrice);
             DetailResponse<SeatPrice> response = new DetailResponse<>(seatPrice1, userReq, null);

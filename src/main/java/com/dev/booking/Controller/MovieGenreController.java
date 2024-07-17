@@ -1,9 +1,11 @@
 package com.dev.booking.Controller;
 
+import com.dev.booking.Entity.Genre;
 import com.dev.booking.Entity.Movie;
 import com.dev.booking.Entity.MovieGenre;
 import com.dev.booking.Entity.User;
 import com.dev.booking.JWT.JwtRequestFilter;
+import com.dev.booking.Repository.GenreRepository;
 import com.dev.booking.Repository.MovieGenreRepository;
 import com.dev.booking.Repository.MovieRepository;
 import com.dev.booking.Repository.UserRepository;
@@ -34,6 +36,8 @@ public class MovieGenreController {
     private JwtRequestFilter jwtRequestFilter;
     @Autowired
     private MovieRepository movieRepository;
+    @Autowired
+    private GenreRepository genreRepository;
     @Autowired
     private MappingService mappingService;
 
@@ -75,13 +79,15 @@ public class MovieGenreController {
        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("",response));
     }
     @PutMapping("/{id}")
-    public  ResponseEntity<ResponseObject<DetailResponse<MovieGenre>>> update(@PathVariable Long id, @RequestBody MovieGenre movieGenre, HttpServletRequest request){
+    public  ResponseEntity<ResponseObject<DetailResponse<MovieGenre>>> update(@PathVariable Long id, @RequestBody Genre genre, HttpServletRequest request){
         User userReq = jwtRequestFilter.getUserRequest(request);
         if(userReq == null)
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("not authenticated",null));
         if(!movieGenreRepository.existsById(id))
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
-        DetailResponse<MovieGenre> response= movieGenreService.update(userReq,id,movieGenre);
+        if(!genreRepository.existsById(genre.getId()))
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("genre does not exist",null));
+        DetailResponse<MovieGenre> response= movieGenreService.update(userReq,id,genre);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
     }
 

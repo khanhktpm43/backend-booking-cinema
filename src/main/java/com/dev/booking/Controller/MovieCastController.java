@@ -5,9 +5,11 @@ import com.dev.booking.Entity.MovieCast;
 import com.dev.booking.Entity.MovieGenre;
 import com.dev.booking.Entity.User;
 import com.dev.booking.JWT.JwtRequestFilter;
+import com.dev.booking.Repository.CastRepository;
 import com.dev.booking.Repository.MovieCastRepository;
 import com.dev.booking.Repository.MovieRepository;
 import com.dev.booking.Repository.UserRepository;
+import com.dev.booking.RequestDTO.CastDTO;
 import com.dev.booking.RequestDTO.MovieCastDTO;
 import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
@@ -35,7 +37,7 @@ public class MovieCastController {
     @Autowired
     private MovieRepository movieRepository;
     @Autowired
-    private UserRepository userRepository;
+    private CastRepository castRepository;
     @Autowired
     private MappingService mappingService;
 
@@ -79,13 +81,15 @@ public class MovieCastController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("",response));
     }
     @PutMapping("/{id}")
-    public  ResponseEntity<ResponseObject<DetailResponse<MovieCast>>> update(@PathVariable Long id, @RequestBody MovieCast movieCast, HttpServletRequest request){
+    public  ResponseEntity<ResponseObject<DetailResponse<MovieCast>>> update(@PathVariable Long id, @RequestBody CastDTO castDTO, HttpServletRequest request){
         User userReq = jwtRequestFilter.getUserRequest(request);
         if(userReq == null)
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("not authenticated",null));
         if(!movieCastRepository.existsById(id))
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
-        DetailResponse<MovieCast> response= movieCastService.update(userReq,id,movieCast);
+        if(!castRepository.existsById(castDTO.getCast().getId()) || (castDTO.getRoleCast() != 1 && castDTO.getRoleCast() != 0))
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("cast does not exist or role invalid",null));
+        DetailResponse<MovieCast> response= movieCastService.update(userReq,id,castDTO);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
     }
 

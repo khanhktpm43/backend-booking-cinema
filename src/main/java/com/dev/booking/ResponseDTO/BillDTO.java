@@ -1,7 +1,7 @@
 package com.dev.booking.ResponseDTO;
 
 import com.dev.booking.Entity.Ticket;
-import com.dev.booking.RequestDTO.FoodOrderDTO;
+import com.dev.booking.RequestDTO.OrderFoodDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,8 +20,6 @@ public class BillDTO {
     private LocalDateTime showtime;
     private String room;
     private List<Ticket> seats;
-    private List<FoodOrderDTO> foods;
+    private List<OrderFoodDTO> foods;
     private float totalPrice;
-
-
 }

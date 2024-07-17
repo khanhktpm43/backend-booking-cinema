@@ -102,7 +102,6 @@ public class SeatController {
     @Transactional
     @PostMapping("/room/{roomId}")
     public ResponseEntity<ResponseObject<List<DetailResponse<Seat>>>> createSeatsByRoom(@PathVariable Long roomId, @RequestBody List<SeatDTO> seatDTOS,  HttpServletRequest request){
-
         User userReq = jwtRequestFilter.getUserRequest(request);
         if(userReq == null)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
@@ -110,7 +109,6 @@ public class SeatController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("room not found", null));
         if(seatDTOS.isEmpty())
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("seats is Empty", null));
-
         Room room = roomRepository.findById(roomId).orElseThrow();
         List<DetailResponse<Seat>> responses = seatService.createSeats(room,seatDTOS, userReq);
         if (responses.isEmpty())
@@ -121,9 +119,6 @@ public class SeatController {
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Seat>>> update(@PathVariable Long id,@RequestBody Seat seat, HttpServletRequest request){
         if (seatRepository.existsById(id) ) {
-//            Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
-//            String username = (String) tokenAndUsername.get("username");
-//            User userReq = userRepository.findByUserName(username).orElse(null);
             User userReq = jwtRequestFilter.getUserRequest(request);
             if(userReq == null){
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));

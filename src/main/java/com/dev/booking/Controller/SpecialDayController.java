@@ -53,7 +53,7 @@ public class SpecialDayController {
     ){
         Sort.Direction direction = Sort.Direction.fromString(sort[1]);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<SpecialDay> specialDays = specialDayRepository.findByMothAndYear(month, year, pageable);
+        Page<SpecialDay> specialDays = specialDayRepository.findByMonthAndYear(month, year, pageable);
         Page<DetailResponse<SpecialDay>> result = mappingService.mapToResponse(specialDays);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }

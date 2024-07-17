@@ -10,6 +10,7 @@ import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.ShowtimeResponse;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
 import com.dev.booking.Service.MappingService;
+import com.dev.booking.Service.SeatPriceService;
 import com.dev.booking.Service.ShowtimeService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,8 @@ public class ShowtimeController {
     private ShowtimeRepository showtimeRepository;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
-
+    @Autowired
+    private SeatPriceService seatPriceService;
     @Autowired
     private ShowtimeService showtimeService;
     @Autowired
@@ -71,6 +73,17 @@ public class ShowtimeController {
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+    }
+    @GetMapping("/{id}/prices")
+    public ResponseEntity<ResponseObject<List<DetailResponse<SeatPrice>>>> getPricingTableByShowtime(@PathVariable Long id){
+        if(!showtimeRepository.existsByIdAndDeleted(id,false)){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+        }
+        Showtime showtime = showtimeRepository.findById(id).orElseThrow();
+        List<SeatPrice> prices = seatPriceService.getPricingTableByShowtime(showtime);
+        List<DetailResponse<SeatPrice>> responses = mappingService.mapToResponse(prices);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
+
     }
     @GetMapping("/date")
     public ResponseEntity<ResponseObject<List<ShowtimeResponse>>>  getById( @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date){

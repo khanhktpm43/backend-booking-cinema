@@ -1,12 +1,14 @@
 package com.dev.booking.Repository;
 
 import com.dev.booking.Entity.SeatPrice;
+import com.dev.booking.Entity.SeatType;
 import com.dev.booking.Entity.SpecialDay;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -16,4 +18,25 @@ public interface SeatPriceRepository extends JpaRepository<SeatPrice, Long> {
 
     @Query("SELECT CASE WHEN COUNT(sp) = 0 THEN false ELSE true END FROM SeatPrice sp WHERE sp.seatType = :#{#seatPrice.seatType} AND sp.normalDay = :#{#seatPrice.normalDay} AND sp.weekend = :#{#seatPrice.weekend} AND sp.earlyShow = :#{#seatPrice.earlyShow} AND sp.specialDay = :#{#seatPrice.specialDay} AND ((sp.startDate <= :#{#seatPrice.startDate} AND sp.endDate >= :#{#seatPrice.startDate}) OR (sp.startDate <= :#{#seatPrice.endDate} AND sp.endDate >= :#{#seatPrice.endDate})) AND sp.id <> :currentId ")
     boolean checkDuplicateSeatPrice(@Param("seatPrice") SeatPrice seatPrice, @Param("currentId") Long currentId);
+
+    @Query(value = "SELECT price FROM seat_price WHERE " +
+            ":inputDate BETWEEN startDate AND endDate AND " +
+            "seatType = :type AND " +
+            "((:code = 7 AND normalDay = 1) OR " +
+            "(:code = 5 AND weekend = 1) OR " +
+            "(:code = 1 AND specialDay = 1) OR" +
+            "(:code = 3 AND earlyShow = 1) )", nativeQuery = true)
+    float findPriceByDateAndCodeAndType(@Param("inputDate") LocalDateTime inputDate,
+                                               @Param("code") int code,
+                                               @Param("type") SeatType type);
+
+    @Query(value = "SELECT * FROM seat_price WHERE " +
+            ":inputDate BETWEEN startDate AND endDate AND " +
+            "((:code = 7 AND normalDay = 1) OR " +
+            "(:code = 5 AND weekend = 1) OR " +
+            "(:code = 1 AND specialDay = 1) OR" +
+            "(:code = 3 AND earlyShow = 1) )", nativeQuery = true)
+    List<SeatPrice> findPriceByDate(@Param("inputDate") LocalDateTime inputDate,
+                                        @Param("code") int code);
+
 }

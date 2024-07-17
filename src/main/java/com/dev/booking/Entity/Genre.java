@@ -24,7 +24,7 @@ public class Genre extends BaseEntity {
     private String name;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "genre", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<MovieGenre> movieGenres;
+    @OneToMany(mappedBy = "genre",cascade = CascadeType.ALL)
+    private Set<MovieGenre> movieGenres = new HashSet<>();
 
 }

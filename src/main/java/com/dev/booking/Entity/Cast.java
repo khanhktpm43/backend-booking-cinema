@@ -23,6 +23,6 @@ public class Cast extends BaseEntity{
 
     @OneToMany(mappedBy = "cast", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private Set<MovieCast> movieCasts;
+    private Set<MovieCast> movieCasts = new HashSet<>();
     // Getters and setters
 }

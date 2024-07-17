@@ -8,6 +8,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 @Data
 @Entity
@@ -41,14 +42,14 @@ public class Movie  extends BaseEntity{
     private boolean deleted = false;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private Set<MovieGenre> movieGenres;
+    @OneToMany(mappedBy = "movie",cascade = CascadeType.ALL)
+   // @OnDelete(action = OnDeleteAction.CASCADE)
+    private Set<MovieGenre> movieGenres = new HashSet<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private Set<MovieCast> movieCasts;
+   // @OnDelete(action = OnDeleteAction.CASCADE)
+    private Set<MovieCast> movieCasts = new HashSet<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -64,6 +65,14 @@ public class Movie  extends BaseEntity{
         this.duration = duration;
     }
 
-
-    // Getters and setters
+    public Movie(Long id, User createdBy, User updatedBy, LocalDateTime createdAt, LocalDateTime updatedAt, String name, LocalDateTime releaseDate, byte[] image, String overview, String trailer, int duration) {
+        super(id, createdBy, updatedBy, createdAt, updatedAt);
+        this.name = name;
+        this.releaseDate = releaseDate;
+        this.image = image;
+        this.overview = overview;
+        this.trailer = trailer;
+        this.duration = duration;
+    }
+// Getters and setters
 }
