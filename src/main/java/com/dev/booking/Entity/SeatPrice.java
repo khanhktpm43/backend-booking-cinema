@@ -32,7 +32,7 @@ public class SeatPrice extends BaseEntity{
     private boolean earlyShow;
 
     @Column(nullable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+ //   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime startDate;
 
     @Column(nullable = false)

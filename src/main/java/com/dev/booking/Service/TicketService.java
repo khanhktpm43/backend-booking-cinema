@@ -24,7 +24,6 @@ public class TicketService {
 
     @Transactional
     public List<Ticket> BookTicket(User user, Booking booking, Showtime showtime, List<Seat> seats){
-
         List<Ticket> tickets = new ArrayList<>();
         for (Seat item: seats){
             Ticket ticket = new Ticket();

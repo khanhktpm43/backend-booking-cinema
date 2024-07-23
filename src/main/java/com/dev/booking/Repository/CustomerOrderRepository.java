@@ -11,7 +11,5 @@ import java.util.List;
 
 @Repository
 public interface CustomerOrderRepository extends JpaRepository<CustomerOrder,Long> {
-    Page<CustomerOrder> findAllByDeleted(boolean b, Pageable pageable);
 
-    boolean existsByIdAndDeleted(Long id, boolean b);
 }

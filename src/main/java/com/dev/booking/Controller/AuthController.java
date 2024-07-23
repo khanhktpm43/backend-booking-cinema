@@ -23,18 +23,16 @@ public class AuthController {
     public ResponseEntity<ResponseObject<TokenDTO>> login(@RequestBody LoginDTO loginDTO){
         TokenDTO tokenDTO = authService.login(loginDTO);
         if(tokenDTO != null){
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<TokenDTO>("",tokenDTO));
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",tokenDTO));
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<TokenDTO>("Unauthorized: Invalid username or password",null));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Unauthorized: Invalid username or password",null));
     }
-
     @PostMapping("/refresh-token")
     public ResponseEntity<ResponseObject<TokenDTO>> refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest){
        TokenDTO tokenDTO = authService.renewAccessToken(refreshTokenRequest);
        if(tokenDTO != null){
-           return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<TokenDTO>("", tokenDTO));
+           return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", tokenDTO));
        }
-
-        return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<TokenDTO>("Invalid Refresh Token", tokenDTO));
+        return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Invalid Refresh Token", null));
     }
 }

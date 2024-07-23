@@ -5,17 +5,20 @@ import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.GenreRepository;
 import com.dev.booking.Repository.MovieGenreRepository;
 import com.dev.booking.Repository.MovieRepository;
-import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.RequestDTO.MovieGenreDTO;
 import com.dev.booking.ResponseDTO.DetailResponse;
-import com.dev.booking.ResponseDTO.UserBasicDTO;
+import com.dev.booking.ResponseDTO.ResponseObject;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class MovieGenreService {
@@ -27,6 +30,8 @@ public class MovieGenreService {
     private JwtRequestFilter jwtRequestFilter;
     @Autowired
     private MovieGenreRepository movieGenreRepository;
+    @Autowired
+    private MappingService mappingService;
 
     public DetailResponse<Movie> attachGenres(HttpServletRequest request, MovieGenreDTO movieGenreDTO) {
         User userReq = jwtRequestFilter.getUserRequest(request);
@@ -57,18 +62,31 @@ public class MovieGenreService {
         if (result == null) {
             return null;
         }
-        DetailResponse<Movie> response = new DetailResponse<>(result, result.getCreatedBy(), result.getUpdatedBy());
+        DetailResponse<Movie> response = mappingService.mapToResponse(result);
+        //new DetailResponse<>(result, result.getCreatedBy(), result.getUpdatedBy());
         return response;
     }
 
-    public DetailResponse<MovieGenre> update(User userReq, Long id, Genre genre) {
-        MovieGenre movieGenre1 = movieGenreRepository.findById(id).orElse(null);
+    public DetailResponse<MovieGenre> update(HttpServletRequest request, Long id, Genre genre) {
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        MovieGenre movieGenre1 = movieGenreRepository.findById(id).orElseThrow();
        // movieGenre1.setMovie(movieGenre.getMovie());
         movieGenre1.setGenre(genre);
         movieGenre1.setUpdatedAt(LocalDateTime.now());
         movieGenre1.setUpdatedBy(userReq);
         MovieGenre movieGenre2 = movieGenreRepository.save(movieGenre1);
-        DetailResponse<MovieGenre> response = new DetailResponse<>(movieGenre2, movieGenre2.getCreatedBy(), userReq);
-        return response;
+        return mappingService.mapToResponse(movieGenre2);
+    }
+
+    public Page<DetailResponse<MovieGenre>> getAll(int page, int size, String[] sort) {
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+        Page<MovieGenre> movieGenres = movieGenreRepository.findAll(pageable);
+        return mappingService.mapToResponse(movieGenres);
+    }
+
+    public DetailResponse<MovieGenre> getById(Long id) {
+        MovieGenre movieGenre = movieGenreRepository.findById(id).orElse(null);
+        return mappingService.mapToResponse(movieGenre);
     }
 }

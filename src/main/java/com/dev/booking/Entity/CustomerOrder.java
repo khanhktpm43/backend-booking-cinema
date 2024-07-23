@@ -30,8 +30,6 @@ public class CustomerOrder extends BaseEntity{
     @Column(nullable = false)
     private float price;
 
-    @JsonIgnore
-    private boolean deleted = false;
 
 
     // Getters and Setters

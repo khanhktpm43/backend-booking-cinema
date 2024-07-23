@@ -16,6 +16,7 @@ public class BillDTO {
     private String customerName;
     private String phone;
     private String mail;
+    private LocalDateTime createdAt;
     private String movieName;
     private LocalDateTime showtime;
     private String room;

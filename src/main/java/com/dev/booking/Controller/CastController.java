@@ -32,29 +32,17 @@ public class CastController {
     @Autowired
     private CastRepository castRepository;
     @Autowired
-    private MovieCastRepository movieCastRepository;
-    @Autowired
-    private MappingService mappingService;
-    @Autowired
-    private JwtRequestFilter jwtRequestFilter;
-
+    private CastService castService;
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject<Page<DetailResponse<Cast>>>> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt,desc") String[] sort) {
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<Cast> casts = castRepository.findAll(pageable);
-        Page<DetailResponse<Cast>> responses = mappingService.mapToResponse(casts);
+    public ResponseEntity<ResponseObject<Page<DetailResponse<Cast>>>> getAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "createdAt,desc") String[] sort) {
+        Page<DetailResponse<Cast>> responses = castService.getAll(page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Cast>>> getById(@PathVariable Long id) {
         if (castRepository.existsById(id)) {
-            Cast cast = castRepository.findById(id).orElse(null);
-            DetailResponse<Cast> response = mappingService.mapToResponse(cast);
+            DetailResponse<Cast> response = castService.getById(id);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
@@ -62,39 +50,14 @@ public class CastController {
 
     @PostMapping("")
     public ResponseEntity<ResponseObject<DetailResponse<Cast>>> create(@RequestBody Cast cast, HttpServletRequest request) {
-        User userReq = jwtRequestFilter.getUserRequest(request);
-        if (userReq == null)
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
-        cast.setId(null);
-        cast.setCreatedAt(LocalDateTime.now());
-        cast.setCreatedBy(userReq);
-        cast.setUpdatedAt(null);
-        Cast newCast = castRepository.save(cast);
-
-        DetailResponse<Cast> response = new DetailResponse<>(newCast, newCast.getCreatedBy(), null);
+        DetailResponse<Cast> response = castService.create(request, cast);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
-
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Cast>>> update(@PathVariable Long id, @RequestBody Cast cast, HttpServletRequest request) {
-        User userReq = jwtRequestFilter.getUserRequest(request);
-        if (userReq == null)
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
         if (castRepository.existsById(id)) {
-            Cast cast1 = castRepository.findById(id).orElse(null);
-            cast1.setUpdatedBy(userReq);
-            cast1.setUpdatedAt(LocalDateTime.now());
-            cast1.setName(cast.getName());
-            Cast newCast = castRepository.save(cast1);
-//            UserBasicDTO createdBy = null;
-//            if(newCast.getCreatedBy() != null){
-//                User user = userRepository.findById(newCast.getCreatedBy()).orElse(null);
-//                if(user != null)
-//                    createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-//            }
- //           UserBasicDTO updatedBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-            DetailResponse<Cast> response =mappingService.mapToResponse(newCast);
+            DetailResponse<Cast> response = castService.update(request, id , cast);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
@@ -103,9 +66,7 @@ public class CastController {
     @DeleteMapping("{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Cast>>> delete(@PathVariable Long id) {
         if (castRepository.existsById(id)) {
-            Cast cast = castRepository.findById(id).orElse(null);
-            movieCastRepository.deleteByCast(cast);
-            castRepository.deleteById(id);
+            castService.delete(id);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", null));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));

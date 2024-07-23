@@ -16,4 +16,6 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     boolean existsByIdAndDeleted(Long id, boolean b);
 
     Optional<Food> findByIdAndDeleted(Long id, boolean b);
+
+    boolean existsByName(String name);
 }

@@ -33,24 +33,16 @@ public class MovieGenreController {
     @Autowired
     private MovieGenreService movieGenreService;
     @Autowired
-    private JwtRequestFilter jwtRequestFilter;
-    @Autowired
     private MovieRepository movieRepository;
     @Autowired
     private GenreRepository genreRepository;
-    @Autowired
-    private MappingService mappingService;
 
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<MovieGenre>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt,desc") String[] sort){
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-
-        Page<MovieGenre> movieGenres = movieGenreRepository.findAll(pageable);
-        Page<DetailResponse<MovieGenre>> responses = mappingService.mapToResponse(movieGenres);
+        Page<DetailResponse<MovieGenre>> responses = movieGenreService.getAll(page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
 //    @GetMapping("/movie")
@@ -64,8 +56,7 @@ public class MovieGenreController {
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<MovieGenre>>> getById(@PathVariable Long id){
         if(movieGenreRepository.existsById(id)){
-            MovieGenre movieGenre = movieGenreRepository.findById(id).orElse(null);
-            DetailResponse<MovieGenre> response = new DetailResponse<>(movieGenre, movieGenre.getCreatedBy(), movieGenre.getUpdatedBy());
+            DetailResponse<MovieGenre> response =  movieGenreService.getById(id);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
@@ -80,18 +71,13 @@ public class MovieGenreController {
     }
     @PutMapping("/{id}")
     public  ResponseEntity<ResponseObject<DetailResponse<MovieGenre>>> update(@PathVariable Long id, @RequestBody Genre genre, HttpServletRequest request){
-        User userReq = jwtRequestFilter.getUserRequest(request);
-        if(userReq == null)
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("not authenticated",null));
         if(!movieGenreRepository.existsById(id))
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
         if(!genreRepository.existsById(genre.getId()))
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("genre does not exist",null));
-        DetailResponse<MovieGenre> response= movieGenreService.update(userReq,id,genre);
+        DetailResponse<MovieGenre> response= movieGenreService.update(request,id,genre);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
     }
-
-
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseObject<MovieGenre>> delete(@PathVariable Long id){
         if(movieGenreRepository.existsById(id)){

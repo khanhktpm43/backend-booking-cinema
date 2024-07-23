@@ -32,15 +32,14 @@ public class SpecialDayController {
     private JwtRequestFilter jwtRequestFilter;
     @Autowired
     private MappingService mappingService;
+    @Autowired
+    private SpecialDayService specialDayService;
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<SpecialDay>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt,desc") String[] sort){
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<SpecialDay> specialDays = specialDayRepository.findAll(pageable);
-        Page<DetailResponse<SpecialDay>> result = mappingService.mapToResponse(specialDays);
+        Page<DetailResponse<SpecialDay>> result = specialDayService.getAll(page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
     @GetMapping("/month-year")
@@ -48,25 +47,20 @@ public class SpecialDayController {
             @RequestParam int month,
             @RequestParam int year,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "start,asc") String[] sort
     ){
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<SpecialDay> specialDays = specialDayRepository.findByMonthAndYear(month, year, pageable);
-        Page<DetailResponse<SpecialDay>> result = mappingService.mapToResponse(specialDays);
+        Page<DetailResponse<SpecialDay>> result = specialDayService.getByMonthYear(month, year, page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SpecialDay>>> getById(@PathVariable Long id){
         if (specialDayRepository.existsById(id)) {
-            SpecialDay specialDay = specialDayRepository.findById(id).orElse(null);
-            DetailResponse<SpecialDay> response = mappingService.mapToResponse(specialDay);
+            DetailResponse<SpecialDay> response = specialDayService.getById(id);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
-
     }
 
     @PostMapping("")
@@ -75,37 +69,14 @@ public class SpecialDayController {
         if (specialDayRepository.exists(example)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("Information already exists", null));
         }
-        User userReq = jwtRequestFilter.getUserRequest(request);
-        if(userReq == null){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
-        }
-        specialDay.setId(null);
-        specialDay.setCreatedBy(userReq);
-        specialDay.setCreatedAt(LocalDateTime.now());
-        specialDay.setUpdatedAt(null);
-        SpecialDay newSpecialDay = specialDayRepository.save(specialDay);
-
-        DetailResponse<SpecialDay> response = new DetailResponse<>(newSpecialDay, newSpecialDay.getCreatedBy(), null);
+        DetailResponse<SpecialDay> response = specialDayService.create(request, specialDay);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
-
 
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SpecialDay>>> update(@PathVariable Long id,@RequestBody SpecialDay specialDay, HttpServletRequest request){
         if (specialDayRepository.existsById(id) ) {
-            User userReq = jwtRequestFilter.getUserRequest(request);
-            if(userReq == null){
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
-            }
-            SpecialDay day = specialDayRepository.findById(id).orElseThrow();
-            day.setName(specialDay.getName());
-            day.setStart(specialDay.getStart());
-            day.setEnd(specialDay.getEnd());
-            day.setUpdatedAt(LocalDateTime.now());
-            day.setUpdatedBy(userReq);
-            SpecialDay newday = specialDayRepository.save(day);
-//
-            DetailResponse<SpecialDay> response = new DetailResponse<>(newday, newday.getCreatedBy(), newday.getUpdatedBy());
+            DetailResponse<SpecialDay> response = specialDayService.update(request, id, specialDay); // new DetailResponse<>(newday, newday.getCreatedBy(), newday.getUpdatedBy());
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));

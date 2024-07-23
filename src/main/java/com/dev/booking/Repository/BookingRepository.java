@@ -11,5 +11,5 @@ import java.util.List;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking,Long> {
-    Page<Booking> findAllByDeleted(boolean b , Pageable pageable);
+
 }

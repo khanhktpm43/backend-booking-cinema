@@ -31,15 +31,11 @@ public class Booking extends BaseEntity {
     private float totalPrice;
 
     @JsonIgnore
-    private boolean deleted = false;
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Ticket> tickets;
 
     @JsonIgnore
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
-    //  @JsonBackReference("booking-tickets")
-    private Set<Ticket> tickets;
-    @JsonIgnore
-    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
-    //  @JsonBackReference("booking-orders")
     private Set<CustomerOrder> customerOrders;
 
     // Getters and Setters

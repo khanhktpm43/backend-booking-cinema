@@ -1,6 +1,4 @@
 package com.dev.booking.Controller;
-
-import com.dev.booking.Entity.MyUserDetails;
 import com.dev.booking.Entity.User;
 import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.UserRepository;
@@ -11,7 +9,6 @@ import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.TokenDTO;
 import com.dev.booking.ResponseDTO.UserDetailResponse;
 import com.dev.booking.Service.UserService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -37,10 +34,8 @@ public class UserController {
     private JwtRequestFilter jwtRequestFilter;
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<UserDetailResponse>> getById(@PathVariable Long id) {
-
         if (userRepository.existsById(id)) {
             UserDetailResponse response = userService.getMyUserDetailsById(id);
-
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<UserDetailResponse>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<UserDetailResponse>("id does not exist", null));
@@ -48,7 +43,6 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<ResponseObject<UserDetailResponse>> getByToken(HttpServletRequest request) {
-
         UserDetailResponse response = userService.getMyUserDetailsFromAccessToken(request);
         if (response.getUser() != null) {
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<UserDetailResponse>("", response));
@@ -72,9 +66,9 @@ public class UserController {
     public ResponseEntity<ResponseObject<TokenDTO>> register(@RequestBody RegisterRequest request) {
         TokenDTO tokenDTO = userService.register(request);
         if (tokenDTO != null) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<TokenDTO>("", tokenDTO));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", tokenDTO));
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<TokenDTO>("username, phone or email already exists in the system", null));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("username, phone or email already exists in the system", null));
     }
     @PostMapping("/create")
     public ResponseEntity<ResponseObject<UserDetailResponse>> create(HttpServletRequest request, @RequestBody CreateUserRequest createUserRequest) {
@@ -98,19 +92,10 @@ public class UserController {
         User user = userRepository.save(userReq);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", user));
     }
-    @PatchMapping("/change-password1")
-    public ResponseEntity<ResponseObject<User>> changePassword1(@RequestBody PasswordChangeDTO passwordChangeDTO, HttpServletRequest request){
-        User userReq = jwtRequestFilter.getUserRequest(request);
-        if(userReq == null){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
-        }
-        if(!new BCryptPasswordEncoder().matches(passwordChangeDTO.getCurrentPassword(), userReq.getPassWord()))
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("Current password is incorrect",null));
-        if (!passwordChangeDTO.getNewPassword().equals(passwordChangeDTO.getConfirmNewPassword())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("New passwords do not match",null));
-        }
-        userReq.setPassWord(new BCryptPasswordEncoder().encode(passwordChangeDTO.getNewPassword()));
-        User user = userRepository.save(userReq);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", user));
+    @PostMapping("")
+    public ResponseEntity<ResponseObject<User>> updateInfo(@RequestBody User user){
+        return null;
     }
+
+
 }

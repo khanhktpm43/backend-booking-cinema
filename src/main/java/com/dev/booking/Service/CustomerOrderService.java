@@ -7,7 +7,12 @@ import com.dev.booking.Entity.User;
 import com.dev.booking.Repository.CustomerOrderRepository;
 import com.dev.booking.Repository.FoodRepository;
 import com.dev.booking.RequestDTO.OrderFoodDTO;
+import com.dev.booking.ResponseDTO.DetailResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +26,8 @@ public class CustomerOrderService {
     private CustomerOrderRepository customerOrderRepository;
     @Autowired
     private FoodRepository foodRepository;
+    @Autowired
+    private MappingService mappingService;
 
     @Transactional
     public List<CustomerOrder> orderFood(User user, Booking booking, List<OrderFoodDTO> orderFoodDTOS){
@@ -39,5 +46,12 @@ public class CustomerOrderService {
             orders.add(createdOrder);
         }
         return orders;
+    }
+
+    public Page<DetailResponse<CustomerOrder>> getAll(int page, int size, String[] sort) {
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+        Page<CustomerOrder> customerOrders = customerOrderRepository.findAll( pageable);
+        return mappingService.mapToResponse(customerOrders);
     }
 }

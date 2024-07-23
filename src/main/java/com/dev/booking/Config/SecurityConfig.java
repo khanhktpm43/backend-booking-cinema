@@ -31,8 +31,6 @@ public class SecurityConfig  {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
 
-
-
     @Bean
    public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -49,7 +47,7 @@ public class SecurityConfig  {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(authz -> authz
+                .authorizeHttpRequests(auth -> auth
                      //   .requestMatchers("api/v1/auth/login", "api/v1/user/register","api/v1/user/**").permitAll()
                         .anyRequest().permitAll()
                 )

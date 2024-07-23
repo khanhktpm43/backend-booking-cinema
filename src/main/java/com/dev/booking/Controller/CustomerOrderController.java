@@ -6,6 +6,7 @@ import com.dev.booking.Repository.CustomerOrderRepository;
 import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
+import com.dev.booking.Service.CustomerOrderService;
 import com.dev.booking.Service.MappingService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,48 +25,13 @@ import java.util.List;
 @RequestMapping("api/v1/customer-orders")
 public class CustomerOrderController {
     @Autowired
-    private CustomerOrderRepository customerOrderRepository;
-    @Autowired
-    private JwtRequestFilter jwtRequestFilter;
-    @Autowired
-    private MappingService mappingService;
+    private CustomerOrderService service;
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject<Page<DetailResponse<CustomerOrder>>>> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<CustomerOrder> customerOrders = customerOrderRepository.findAllByDeleted(false, pageable);
-        Page<DetailResponse<CustomerOrder>> responses = mappingService.mapToResponse(customerOrders);
+    public ResponseEntity<ResponseObject<Page<DetailResponse<CustomerOrder>>>> getAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "createdAt,desc") String[] sort){
+        Page<DetailResponse<CustomerOrder>> responses = service.getAll(page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
-    @GetMapping("/deleted")
-    public ResponseEntity<ResponseObject<Page<DetailResponse<CustomerOrder>>>> getAllDeleted(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<CustomerOrder> customerOrders = customerOrderRepository.findAllByDeleted(true,pageable);
-        Page<DetailResponse<CustomerOrder>> responses = mappingService.mapToResponse(customerOrders);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
-    }
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseObject<DetailResponse<Food>>> delete(@PathVariable Long id, HttpServletRequest request){
-        User userReq = jwtRequestFilter.getUserRequest(request);
-        if(userReq == null){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
-        }
-        if(customerOrderRepository.existsByIdAndDeleted(id, false)){
-            CustomerOrder customerOrder = customerOrderRepository.findById(id).orElseThrow();
-            customerOrder.setDeleted(true);
-            customerOrder.setUpdatedBy(userReq);
-            customerOrder.setUpdatedAt(LocalDateTime.now());
-            customerOrderRepository.save(customerOrder);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",null));
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
-    }
+
+
 }

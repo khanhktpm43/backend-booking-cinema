@@ -40,145 +40,68 @@ public class MovieController {
     private MovieRepository movieRepository;
     @Autowired
     private MovieService movieService;
-    @Autowired
-    private MappingService mappingService;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private JwtRequestFilter jwtRequestFilter;
+
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Movie>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-
-        Page<Movie> movies = movieRepository.findByDeleted(false, pageable);
-        Page<DetailResponse<Movie>> result = mappingService.mapToResponse(movies);
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort) {
+        Page<DetailResponse<Movie>> result = movieService.getAllByDeleted(false, page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
+
     @GetMapping("/deleted")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Movie>>>> getAllByDeleted(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-
-        Page<Movie> movies = movieRepository.findByDeleted(true, pageable);
-        Page<DetailResponse<Movie>> result = mappingService.mapToResponse(movies);
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort) {
+        Page<DetailResponse<Movie>> result = movieService.getAllByDeleted(true, page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<MovieResponse>>> getById(@PathVariable Long id) {
         if (movieRepository.existsById(id)) {
             MovieResponse movie = movieService.getById(id);
-            DetailResponse<MovieResponse> response = new DetailResponse<>(movie,movie.getMovie().getCreatedBy(), movie.getMovie().getUpdatedBy());
+            DetailResponse<MovieResponse> response = new DetailResponse<>(movie, movie.getMovie().getCreatedBy(), movie.getMovie().getUpdatedBy(), movie.getMovie().getCreatedAt(), movie.getMovie().getUpdatedAt());
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
-
     }
 
     @PostMapping("")
-    public ResponseEntity<ResponseObject<DetailResponse<Movie>>> create(@RequestParam("name") String name,
-                                                        @RequestParam("releaseDate")  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime releaseDate,
-                                                        @RequestParam("overview") String overview,
-                                                        @RequestParam("duration") int duration,
-                                                        @RequestParam("image") MultipartFile image,
-                                                        @RequestParam("trailer") String trailer,
-                                                        HttpServletRequest request) {
-        User userReq = jwtRequestFilter.getUserRequest(request);
-        if(userReq == null){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
-        }
-        try {
-            Movie movie = new Movie();
-            movie.setName(name);
-            movie.setReleaseDate(releaseDate);
-            movie.setOverview(overview);
-            movie.setDuration(duration);
-            movie.setImage(image.getBytes());
-            movie.setTrailer(trailer);
-            movie.setCreatedAt(LocalDateTime.now());
-            movie.setCreatedBy(userReq);
-            movie.setUpdatedAt(null);
-            Movie newMovie = movieRepository.save(movie);
-            DetailResponse<Movie> response = new DetailResponse<>(newMovie, newMovie.getCreatedBy(), null);
+    public ResponseEntity<ResponseObject<DetailResponse<Movie>>> create(@RequestParam("name") String name, @RequestParam("releaseDate") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime releaseDate, @RequestParam("overview") String overview, @RequestParam("duration") int duration, @RequestParam("image") MultipartFile image, @RequestParam("trailer") String trailer, HttpServletRequest request) {
+        DetailResponse<Movie> response = movieService.create(request, name, releaseDate, overview, duration, image, trailer);
+        if (response != null)
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject<>("Could not save movie", null));
-        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject<>("Could not save movie", null));
     }
+
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseObject<DetailResponse<Movie>>> update(@PathVariable Long id,
-                                                 @RequestParam("name") String name,
-                                                 @RequestParam("releaseDate")  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime releaseDate,
-                                                 @RequestParam("overview") String overview,
-                                                 @RequestParam("duration") int duration,
-                                                 @RequestParam("image") MultipartFile image,
-                                                 @RequestParam("trailer") String trailer,
-                                                        HttpServletRequest request) {
+    public ResponseEntity<ResponseObject<DetailResponse<Movie>>> update(@PathVariable Long id, @RequestParam("name") String name, @RequestParam("releaseDate") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime releaseDate, @RequestParam("overview") String overview, @RequestParam("duration") int duration, @RequestParam("image") MultipartFile image, @RequestParam("trailer") String trailer, HttpServletRequest request) throws IOException {
         if (movieRepository.existsById(id)) {
-            try {
-                User userReq = jwtRequestFilter.getUserRequest(request);
-                if(userReq == null){
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
-                }
-                Movie movie = movieRepository.findById(id).orElse(null);
-                movie.setId(id);
-                movie.setName(name);
-                movie.setReleaseDate(releaseDate);
-                movie.setOverview(overview);
-                movie.setDuration(duration);
-                movie.setImage(image.getBytes());
-                movie.setTrailer(trailer);
-                movie.setUpdatedAt(LocalDateTime.now());
-                movie.setUpdatedBy(userReq);
-                Movie newMovie = movieRepository.save(movie);
-//                User user = userRepository.findById(newMovie.getCreatedBy().getId()).orElse(null);
-//                UserBasicDTO createdBy = new UserBasicDTO(user.getId(), user.getName(), user.getEmail());
-//                UserBasicDTO updatedBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
-                DetailResponse<Movie> response = new DetailResponse<>(newMovie, newMovie.getCreatedBy(), userReq);
-                return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
-            } catch (IOException e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject<>("Could not update movie",null));
-            }
+            DetailResponse<Movie> response = movieService.update(id, request, name, releaseDate, overview, duration, image, trailer);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseObject<Movie>> softDelete(@PathVariable Long id, HttpServletRequest request){
-        User userReq = jwtRequestFilter.getUserRequest(request);
-        if(userReq == null){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+    public ResponseEntity<ResponseObject<Movie>> softDelete(@PathVariable Long id, HttpServletRequest request) {
+        if (movieRepository.existsByIdAndDeleted(id, false)) {
+            movieService.delete(request, id);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", null));
         }
-        if(movieRepository.existsByIdAndDeleted(id, false)){
-            Movie movie = movieRepository.findByIdAndDeleted(id, false).orElse(null);
-            movie.setDeleted(true);
-            movie.setUpdatedBy(userReq);
-            movie.setUpdatedAt(LocalDateTime.now());
-            movieRepository.save(movie);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",null));
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
+
     @PatchMapping("/{id}")
-    public  ResponseEntity<ResponseObject<Movie>> restore(@PathVariable Long id, HttpServletRequest request){
-        User userReq = jwtRequestFilter.getUserRequest(request);
-        if(userReq == null){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+    public ResponseEntity<ResponseObject<Movie>> restore(@PathVariable Long id, HttpServletRequest request) {
+        if (!movieRepository.existsByIdAndDeleted(id, true)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
         }
-        Movie movie = movieRepository.findByIdAndDeleted(id, true).orElse(null);
-        if (movie == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
-        }
-        movie.setDeleted(false);
-        movie.setUpdatedAt(LocalDateTime.now());
-        movie.setUpdatedBy(userReq);
-        movieRepository.save(movie);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",movie));
+        Movie movie = movieService.restore(request, id);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", movie));
     }
 
 }

@@ -4,17 +4,24 @@ import com.dev.booking.Entity.Cast;
 import com.dev.booking.Entity.Genre;
 import com.dev.booking.Entity.Movie;
 import com.dev.booking.Entity.User;
+import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.MovieRepository;
 import com.dev.booking.Repository.UserRepository;
-import com.dev.booking.ResponseDTO.CastDTO;
-import com.dev.booking.ResponseDTO.DetailResponse;
-import com.dev.booking.ResponseDTO.MovieResponse;
-import com.dev.booking.ResponseDTO.UserBasicDTO;
+import com.dev.booking.ResponseDTO.*;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -27,6 +34,10 @@ public class MovieService {
     private MovieRepository movieRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private MappingService mappingService;
+    @Autowired
+    private JwtRequestFilter jwtRequestFilter;
 
     public MovieResponse getById(Long id) {
         List<Object[]> results = movieRepository.findDetailById(id);
@@ -35,19 +46,19 @@ public class MovieService {
             Long movieId = (Long) result[0];
             Integer duration = (Integer) result[1];
             byte[] image = (byte[]) result[2];
-            String movieName= (String) result[3];
+            String movieName = (String) result[3];
             byte[] blobData = (byte[]) result[4];
             String overview = new String(blobData, StandardCharsets.UTF_8);
-            LocalDateTime release =  convertTimestampToLocalDateTime((Timestamp) result[5]);
+            LocalDateTime release = convertTimestampToLocalDateTime((Timestamp) result[5]);
             byte[] blobTrailer = (byte[]) result[6];
             String trailer = new String(blobTrailer, StandardCharsets.UTF_8);
-            LocalDateTime createdAt =  convertTimestampToLocalDateTime((Timestamp) result[7]);
+            LocalDateTime createdAt = convertTimestampToLocalDateTime((Timestamp) result[7]);
             Long createdId = (Long) result[8];
             User createdBy = userRepository.findById(createdId).orElse(null);
-            LocalDateTime updatedAt =  convertTimestampToLocalDateTime((Timestamp) result[9]);
+            LocalDateTime updatedAt = convertTimestampToLocalDateTime((Timestamp) result[9]);
             Long updatedId = (Long) result[10];
             User updatedBy = userRepository.findById(updatedId).orElse(null);
-            Movie movie = new Movie(movieId,movieName,release,image,overview,trailer,duration,createdAt, createdBy, updatedAt, updatedBy);
+            Movie movie = new Movie(movieId, movieName, release, image, overview, trailer, duration, createdAt, createdBy, updatedAt, updatedBy);
             List<Genre> genres = new ArrayList<>();
             List<CastDTO> casts = new ArrayList<>();
             for (Object[] obj : results) {
@@ -60,7 +71,6 @@ public class MovieService {
                 genre.setId(genreId);
                 genre.setName(genreName);
                 genres.add(genre);
-
                 CastDTO castDTO = new CastDTO();
                 castDTO.setId(castId);
                 castDTO.setName(castName);
@@ -78,10 +88,75 @@ public class MovieService {
         }
         return null;
     }
+
     private LocalDateTime convertTimestampToLocalDateTime(Timestamp timestamp) {
         if (timestamp != null) {
             return timestamp.toLocalDateTime();
         }
         return null;
+    }
+
+
+    public Page<DetailResponse<Movie>> getAllByDeleted(boolean b, int page, int size, String[] sort) {
+        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
+        Page<Movie> movies = movieRepository.findByDeleted(b, pageable);
+        return mappingService.mapToResponse(movies);
+    }
+
+    public DetailResponse<Movie> create(HttpServletRequest request, String name, LocalDateTime releaseDate, String overview, int duration, MultipartFile image, String trailer) {
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        try {
+            Movie movie = new Movie();
+            movie.setName(name);
+            movie.setReleaseDate(releaseDate);
+            movie.setOverview(overview);
+            movie.setDuration(duration);
+            movie.setImage(image.getBytes());
+            movie.setTrailer(trailer);
+            movie.setCreatedAt(LocalDateTime.now());
+            movie.setCreatedBy(userReq);
+            movie.setUpdatedAt(null);
+            Movie newMovie = movieRepository.save(movie);
+            DetailResponse<Movie> response = new DetailResponse<>(newMovie, newMovie.getCreatedBy(), null, newMovie.getCreatedAt(), newMovie.getUpdatedAt());
+            return response;
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    public DetailResponse<Movie> update(Long id, HttpServletRequest request, String name, LocalDateTime releaseDate, String overview, int duration, MultipartFile image, String trailer) throws IOException {
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        Movie movie = movieRepository.findById(id).orElseThrow();
+        movie.setId(id);
+        movie.setName(name);
+        movie.setReleaseDate(releaseDate);
+        movie.setOverview(overview);
+        movie.setDuration(duration);
+        movie.setImage(image.getBytes());
+        movie.setTrailer(trailer);
+        movie.setUpdatedAt(LocalDateTime.now());
+        movie.setUpdatedBy(userReq);
+        Movie newMovie = movieRepository.save(movie);
+        return new DetailResponse<>(newMovie, newMovie.getCreatedBy(), userReq, newMovie.getCreatedAt(), newMovie.getUpdatedAt());
+
+    }
+
+    public void delete(HttpServletRequest request, Long id) {
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        Movie movie = movieRepository.findByIdAndDeleted(id, false).orElseThrow();
+        movie.setDeleted(true);
+        movie.setUpdatedBy(userReq);
+        movie.setUpdatedAt(LocalDateTime.now());
+        movieRepository.save(movie);
+    }
+
+    public Movie restore(HttpServletRequest request, Long id) {
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        Movie movie = movieRepository.findByIdAndDeleted(id, true).orElseThrow();
+        movie.setDeleted(false);
+        movie.setUpdatedAt(LocalDateTime.now());
+        movie.setUpdatedBy(userReq);
+        return   movieRepository.save(movie);
     }
 }

@@ -32,28 +32,20 @@ public class SeatPriceController {
     @Autowired
     private SeatPriceRepository seatPriceRepository;
     @Autowired
-    private JwtRequestFilter jwtRequestFilter;
-    @Autowired
     private SeatPriceService seatPriceService;
-    @Autowired
-    private MappingService mappingService;
 
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<SeatPrice>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt,desc") String[] sort){
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<SeatPrice> seatPrices = seatPriceRepository.findAll(pageable);
-        Page<DetailResponse<SeatPrice>> responses = mappingService.mapToResponse(seatPrices);
+        Page<DetailResponse<SeatPrice>> responses = seatPriceService.getAll(page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
     @GetMapping("{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SeatPrice>>> getById(@PathVariable Long id){
         if(seatPriceRepository.existsById(id)){
-            SeatPrice seatPrice = seatPriceRepository.findById(id).orElse(null);
-            DetailResponse<SeatPrice> response = mappingService.mapToResponse(seatPrice);
+            DetailResponse<SeatPrice> response = seatPriceService.getById(id);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
@@ -61,16 +53,7 @@ public class SeatPriceController {
     @PostMapping("")
     public ResponseEntity<ResponseObject<DetailResponse<SeatPrice>>> create(@RequestBody SeatPrice seatPrice, HttpServletRequest request){
         if(seatPriceService.isValid(seatPrice)){
-            User userReq = jwtRequestFilter.getUserRequest(request);
-            if(userReq == null){
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
-            }
-            seatPrice.setId(null);
-            seatPrice.setCreatedBy(userReq);
-            seatPrice.setCreatedAt(LocalDateTime.now());
-            seatPrice.setUpdatedAt(null);
-            SeatPrice seatPrice1 = seatPriceRepository.save(seatPrice);
-            DetailResponse<SeatPrice> response = new DetailResponse<>(seatPrice1, userReq, null);
+            DetailResponse<SeatPrice> response = seatPriceService.create(request, seatPrice);
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("invalid", null));
@@ -78,29 +61,10 @@ public class SeatPriceController {
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SeatPrice>>> update(@PathVariable Long id,@RequestBody SeatPrice seatPrice, HttpServletRequest request){
        if(seatPriceRepository.existsById(id) && seatPrice.isValid()){
-           User userReq = jwtRequestFilter.getUserRequest(request);
-           if(userReq == null){
-               return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
-           }
-           if(seatPriceRepository.checkDuplicateSeatPrice(seatPrice,id))
+           if(seatPriceRepository.checkDuplicateSeatPrice(seatPrice, id))
                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("duplicate", null));
-           SeatPrice seatPrice1 = seatPriceRepository.findById(id).orElse(null);
-           if(seatPrice1 != null){
-               seatPrice1.setPrice(seatPrice.getPrice());
-               seatPrice1.setSeatType(seatPrice.getSeatType());
-               seatPrice1.setStartDate(seatPrice.getStartDate());
-               seatPrice1.setEndDate(seatPrice.getEndDate());
-               seatPrice1.setEarlyShow(seatPrice.isEarlyShow());
-               seatPrice1.setNormalDay(seatPrice.isNormalDay());
-               seatPrice1.setWeekend(seatPrice.isWeekend());
-               seatPrice1.setSpecialDay(seatPrice.isSpecialDay());
-               seatPrice1.setUpdatedAt(LocalDateTime.now());
-               seatPrice1.setUpdatedBy(userReq);
-               SeatPrice seatPrice2 =  seatPriceRepository.save(seatPrice1);
-               DetailResponse<SeatPrice> response = new DetailResponse<>(seatPrice2, seatPrice2.getCreatedBy(), seatPrice2.getUpdatedBy());
-               return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
-           }
-
+           DetailResponse<SeatPrice> response = seatPriceService.update(request, id, seatPrice);
+           return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
        }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("id does not exist or dayType invalid", null));
     }

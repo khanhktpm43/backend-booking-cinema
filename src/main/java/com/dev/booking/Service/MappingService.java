@@ -20,18 +20,18 @@ public class MappingService {
         Pageable pageable = list.getPageable();
         long total = list.getTotalElements();
         Page<DetailResponse<T>> responsePage = list.map(item -> {
-            return new DetailResponse<>(item, item.getCreatedBy(), item.getUpdatedBy());
+            return new DetailResponse<>(item, item.getCreatedBy(), item.getUpdatedBy(),item.getCreatedAt(), item.getUpdatedAt());
         });
         return new PageImpl<>(responsePage.getContent(), pageable, total);
 
     }
     public <T extends BaseEntity> List<DetailResponse<T>> mapToResponse(List<T> list) {
         return list.stream()
-                .map(item -> new DetailResponse<>(item, item.getCreatedBy(), item.getUpdatedBy()))
+                .map(item -> new DetailResponse<>(item, item.getCreatedBy(), item.getUpdatedBy(),item.getCreatedAt(), item.getUpdatedAt()))
                 .collect(Collectors.toList());
     }
 
     public <T extends BaseEntity> DetailResponse<T> mapToResponse(T item) {
-        return new DetailResponse<>(item, item.getCreatedBy(), item.getUpdatedBy());
+        return new DetailResponse<>(item, item.getCreatedBy(), item.getUpdatedBy(), item.getCreatedAt(), item.getUpdatedAt());
     }
 }

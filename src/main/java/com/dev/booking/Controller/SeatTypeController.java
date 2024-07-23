@@ -8,6 +8,7 @@ import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
 import com.dev.booking.Service.MappingService;
+import com.dev.booking.Service.SeatTypeService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -26,115 +27,70 @@ public class SeatTypeController {
     @Autowired
     private SeatTypeRepository seatTypeRepository;
     @Autowired
-    private JwtRequestFilter jwtRequestFilter;
-    @Autowired
-    private MappingService mappingService;
+    private SeatTypeService seatTypeService;
 
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<SeatType>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<SeatType> seatTypes = seatTypeRepository.findAllByDeleted(false, pageable);
-        Page<DetailResponse<SeatType>> result = mappingService.mapToResponse(seatTypes);
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort) {
+        Page<DetailResponse<SeatType>> result = seatTypeService.getByDeleted(false, page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
+
     @GetMapping("/deleted")
     public ResponseEntity<ResponseObject<Page<DetailResponse<SeatType>>>> getAllByDeleted(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<SeatType> seatTypes = seatTypeRepository.findAllByDeleted(true, pageable);
-        Page<DetailResponse<SeatType>> result = mappingService.mapToResponse(seatTypes);
+            @RequestParam(defaultValue = "createdAt,desc") String[] sort) {
+        Page<DetailResponse<SeatType>> result = seatTypeService.getByDeleted(true, page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
 
     }
-    @GetMapping("/{id}")
-    public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> getById(@PathVariable Long id){
-        if (seatTypeRepository.existsById(id)) {
-            SeatType type = seatTypeRepository.findById(id).orElse(null);
 
-            DetailResponse<SeatType> response = mappingService.mapToResponse(type);
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> getById(@PathVariable Long id) {
+        if (seatTypeRepository.existsById(id)) {
+            DetailResponse<SeatType> response = seatTypeService.getById(id);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
 
     @PostMapping("")
-    public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> create(@RequestBody SeatType seatType, HttpServletRequest request){
+    public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> create(@RequestBody SeatType seatType, HttpServletRequest request) {
         Example<SeatType> example = Example.of(seatType);
         if (seatTypeRepository.exists(example)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("Information already exists", null));
         }
-        User userReq = jwtRequestFilter.getUserRequest(request);
-        if(userReq == null){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
-        }
-        seatType.setId(null);
-        seatType.setCreatedBy(userReq);
-        seatType.setCreatedAt(LocalDateTime.now());
-        seatType.setUpdatedAt(null);
-        SeatType newType = seatTypeRepository.save(seatType);
-
-        DetailResponse<SeatType> response = new DetailResponse<>(newType, newType.getCreatedBy(), null);
+        DetailResponse<SeatType> response = seatTypeService.create(request, seatType);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> update(@PathVariable Long id,@RequestBody SeatType seatType, HttpServletRequest request){
+    public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> update(@PathVariable Long id, @RequestBody SeatType seatType, HttpServletRequest request) {
         if (seatTypeRepository.existsById(id)) {
-            User userReq = jwtRequestFilter.getUserRequest(request);
-            if(userReq == null){
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
-            }
-            SeatType type = seatTypeRepository.findById(id).orElse(null);
-            type.setCode(seatType.getCode());
-            type.setName(seatType.getName());
-            type.setUpdatedAt(LocalDateTime.now());
-            type.setUpdatedBy(userReq);
-            SeatType newType = seatTypeRepository.save(type);
-
-            DetailResponse<SeatType> response = new DetailResponse<>(newType, newType.getCreatedBy(), newType.getUpdatedBy());
+            DetailResponse<SeatType> response = seatTypeService.update(request, id, seatType);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
-
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> delete(@PathVariable Long id, HttpServletRequest request){
-        User userReq = jwtRequestFilter.getUserRequest(request);
-        if(userReq == null){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+    public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> delete(@PathVariable Long id, HttpServletRequest request) {
+        if (seatTypeRepository.existsByIdAndDeleted(id, false)) {
+            seatTypeService.delete(request, id);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", null));
         }
-        if(seatTypeRepository.existsByIdAndDeleted(id, false)){
-            SeatType seatType = seatTypeRepository.findById(id).orElse(null);
-            seatType.setDeleted(true);
-            seatType.setUpdatedBy(userReq);
-            seatType.setUpdatedAt(LocalDateTime.now());
-            seatTypeRepository.save(seatType);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",null));
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
+
     @PatchMapping("/{id}")
-    public  ResponseEntity<ResponseObject<SeatType>> restore(@PathVariable Long id, HttpServletRequest request){
-        User userReq = jwtRequestFilter.getUserRequest(request);
-        if(userReq == null){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Not authenticated", null));
+    public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> restore(@PathVariable Long id, HttpServletRequest request) {
+        if (!seatTypeRepository.existsByIdAndDeleted(id, true)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
         }
-        SeatType seatType = seatTypeRepository.findByIdAndDeleted(id, true).orElse(null);
-        if (seatType == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
-        }
-        seatType.setDeleted(false);
-        seatType.setUpdatedAt(LocalDateTime.now());
-        seatType.setUpdatedBy(userReq);
-        seatTypeRepository.save(seatType);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",seatType));
+        DetailResponse<SeatType> response = seatTypeService.restore(request, id);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
     }
 }

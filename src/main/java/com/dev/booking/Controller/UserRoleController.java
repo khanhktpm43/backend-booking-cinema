@@ -63,8 +63,7 @@ public class UserRoleController {
                     }
                 userRoleRepository.save(userRole);
             }
-            User user = userRepository.findById(request.getUser().getId()).orElse(null);
-
+            User user = userRepository.findById(request.getUser().getId()).orElseThrow();
             user.setUpdatedBy(userReq);
             user.setUpdatedAt(LocalDateTime.now());
             userRepository.save(user);
@@ -82,6 +81,5 @@ public class UserRoleController {
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",null));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
-
     }
 }

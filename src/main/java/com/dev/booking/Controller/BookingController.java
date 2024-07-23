@@ -5,6 +5,7 @@ import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.BookingRepository;
 import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
+import com.dev.booking.Service.BookingService;
 import com.dev.booking.Service.MappingService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,33 +26,37 @@ public class BookingController {
     private BookingRepository bookingRepository;
     @Autowired
     private MappingService mappingService;
+    @Autowired
+    private BookingService bookingService;
 
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Booking>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt,desc") String[] sort){
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<Booking> bookings = bookingRepository.findAllByDeleted(false,pageable);
-        Page<DetailResponse<Booking>> responses = mappingService.mapToResponse(bookings);
+        Page<DetailResponse<Booking>> responses = bookingService.getAll(page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
-    @GetMapping("/deleted")
-    public ResponseEntity<ResponseObject<Page<DetailResponse<Booking>>>> getAllDeleted(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt,desc") String[] sort){
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<Booking> bookings = bookingRepository.findAllByDeleted(true, pageable);
-        Page<DetailResponse<Booking>> responses = mappingService.mapToResponse(bookings);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseObject<DetailResponse<Booking>>> getById(@PathVariable Long id){
+        if(!bookingRepository.existsById(id)){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
+        }
+        DetailResponse<Booking> response = bookingService.getById(id);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
     }
     //get detail by id
 
     @PostMapping("")
-    public ResponseEntity<ResponseObject<DetailResponse<Booking>>> bookingOnline(@RequestBody Booking booking, HttpServletRequest request){
+    public ResponseEntity<ResponseObject<DetailResponse<Booking>>> booking(@RequestBody Booking booking, HttpServletRequest request){
+
+       // Booking booking1 = bookingService.createBill()
         return null;
     }
+    @PostMapping("/create")
+    public ResponseEntity<ResponseObject<DetailResponse<Booking>>> create(@RequestBody Booking booking, HttpServletRequest request){
+
+        return null;
+    }
+
 }
