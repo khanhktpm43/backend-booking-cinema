@@ -18,8 +18,6 @@ public class TicketService {
     @Autowired
     private TicketRepository ticketRepository;
     @Autowired
-    private ShowtimeRepository showtimeRepository;
-    @Autowired
     private SeatPriceService seatPriceService;
 
     @Transactional

@@ -36,24 +36,22 @@ public class FoodService {
         Food food1 = foodRepository.save(food);
         return new DetailResponse<>(food1, food1.getCreatedBy(), null, food1.getCreatedAt(), null);
     }
+    public DetailResponse<Food> update(HttpServletRequest request, Long id, MultipartFile file, String name, float price) throws IOException {
+        Food food = Food.builder().name(name).image(file.getBytes()).price(price).build();
+        food.setId(id);
+        return update(request, food);
+    }
 
-    public DetailResponse<Food> update(Long id, HttpServletRequest request, Food food) {
-        Food food1 = foodRepository.findById(id).orElse(null);
-        if (food1 != null) {
+    public DetailResponse<Food> update( HttpServletRequest request, Food food) {
+        Food food1 = foodRepository.findById(food.getId()).orElseThrow();
             User userReq = jwtRequestFilter.getUserRequest(request);
-            if (userReq == null) {
-                return null;
-            }
             food1.setName(food.getName());
             food1.setPrice(food.getPrice());
             food1.setImage(food.getImage());
             food1.setUpdatedBy(userReq);
             food1.setUpdatedAt(LocalDateTime.now());
             foodRepository.save(food1);
-            DetailResponse<Food> response = new DetailResponse<>(food1, food1.getCreatedBy(), food1.getCreatedBy(), food1.getCreatedAt(), food1.getUpdatedAt());
-            return response;
-        }
-        return null;
+            return new DetailResponse<>(food1, food1.getCreatedBy(), food1.getCreatedBy(), food1.getCreatedAt(), food1.getUpdatedAt());
     }
 
     public Page<DetailResponse<Food>> getAll(int page, int size, String[] sort) {
@@ -101,9 +99,5 @@ public class FoodService {
         return mappingService.mapToResponse(food1);
     }
 
-    public DetailResponse<Food> update(HttpServletRequest request, Long id, MultipartFile file, String name, float price) throws IOException {
-        Food food = Food.builder().name(name).image(file.getBytes()).price(price).build();
-        food.setId(id);
-        return create(request, food);
-    }
+
 }

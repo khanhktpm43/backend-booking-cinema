@@ -36,45 +36,47 @@ public class BookingService {
 
     @Transactional
     public DetailResponse<BillDTO> createBill(BookingDTO bookingDTO, User customer, User createdBy) {
-        Booking booking = new Booking();
-        booking.setBookingDate(LocalDateTime.now());
-        booking.setUser(customer);
-        booking.setCreatedAt(LocalDateTime.now());
-        booking.setUpdatedBy(createdBy);
-        booking.setUpdatedAt(null);
-        Booking newBooking = repository.save(booking);
-        List<OrderFoodDTO> foods = new ArrayList<>();
-        List<CustomerOrder> orders = customerOrderService.orderFood(createdBy, newBooking, bookingDTO.getFoodOrderList());
-        float priceFoods = 0;
-        for (CustomerOrder order : orders) {
-            OrderFoodDTO orderFoodDTO = new OrderFoodDTO(order.getFood(), order.getAmount(), order.getPrice());
-            priceFoods += order.getPrice();
-            foods.add(orderFoodDTO);
+        synchronized (bookingDTO.getShowtime()) {
+            Booking booking = new Booking();
+            booking.setBookingDate(LocalDateTime.now());
+            booking.setUser(customer);
+            booking.setCreatedAt(LocalDateTime.now());
+            booking.setUpdatedBy(createdBy);
+            booking.setUpdatedAt(null);
+            Booking newBooking = repository.save(booking);
+            List<OrderFoodDTO> foods = new ArrayList<>();
+            List<CustomerOrder> orders = customerOrderService.orderFood(createdBy, newBooking, bookingDTO.getFoodOrderList());
+            float priceFoods = 0;
+            for (CustomerOrder order : orders) {
+                OrderFoodDTO orderFoodDTO = new OrderFoodDTO(order.getFood(), order.getAmount(), order.getPrice());
+                priceFoods += order.getPrice();
+                foods.add(orderFoodDTO);
+            }
+            List<Ticket> tickets = ticketService.BookTicket(createdBy, newBooking, bookingDTO.getShowtime(), bookingDTO.getSeats());
+            float priceTickets = 0;
+            for (Ticket ticket : tickets) {
+                priceTickets += ticket.getPrice();
+            }
+            float totalPrice = priceFoods + priceTickets;
+            newBooking.setTotalPrice(totalPrice);
+            newBooking.setTickets(new HashSet<>(tickets));
+            newBooking.setCustomerOrders(new HashSet<>(orders));
+            repository.save(newBooking);
+            BillDTO billDTO = new BillDTO();
+            billDTO.setCreatedAt(LocalDateTime.now());
+            billDTO.setCustomerName(customer.getName());
+            billDTO.setMail(customer.getEmail());
+            billDTO.setPhone(customer.getPhone());
+            billDTO.setFoods(foods);
+            billDTO.setSeats(tickets);
+            if (!tickets.isEmpty()) {
+                billDTO.setRoom(tickets.get(0).getShowtime().getRoom().getName());
+                billDTO.setMovieName(tickets.get(0).getShowtime().getMovie().getName());
+                billDTO.setShowtime(tickets.get(0).getShowtime().getStartTime());
+            }
+            billDTO.setTotalPrice(newBooking.getTotalPrice());
+            return new DetailResponse<>(billDTO, createdBy, null, billDTO.getCreatedAt(), null);
         }
-        List<Ticket> tickets = ticketService.BookTicket(createdBy, newBooking, bookingDTO.getShowtime(), bookingDTO.getSeats());
-        float priceTickets = 0;
-        for (Ticket ticket : tickets) {
-            priceTickets += ticket.getPrice();
-        }
-        float totalPrice = priceFoods + priceTickets;
-        newBooking.setTotalPrice(totalPrice);
-        newBooking.setTickets(new HashSet<>(tickets));
-        newBooking.setCustomerOrders(new HashSet<>(orders));
-        repository.save(newBooking);
-        BillDTO billDTO = new BillDTO();
-        billDTO.setCreatedAt(LocalDateTime.now());
-        billDTO.setCustomerName(customer.getName());
-        billDTO.setMail(customer.getEmail());
-        billDTO.setPhone(customer.getPhone());
-        billDTO.setFoods(foods);
-        billDTO.setSeats(tickets);
-        if (!tickets.isEmpty()) {
-            billDTO.setRoom(tickets.get(0).getShowtime().getRoom().getName());
-            billDTO.setMovieName(tickets.get(0).getShowtime().getMovie().getName());
-            billDTO.setShowtime(tickets.get(0).getShowtime().getStartTime());
-        }
-        billDTO.setTotalPrice(newBooking.getTotalPrice());
-        return new DetailResponse<>(billDTO, createdBy, null, billDTO.getCreatedAt(), null);
     }
 
     public Page<DetailResponse<Booking>> getAll(int page, int size, String[] sort) {
