@@ -67,7 +67,6 @@ public class BookingService {
         billDTO.setMail(customer.getEmail());
         billDTO.setPhone(customer.getPhone());
         billDTO.setFoods(foods);
-
         billDTO.setSeats(tickets);
         if (!tickets.isEmpty()) {
             billDTO.setRoom(tickets.get(0).getShowtime().getRoom().getName());

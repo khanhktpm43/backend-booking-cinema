@@ -28,19 +28,13 @@ public class ShowtimeController {
     @Autowired
     private ShowtimeRepository showtimeRepository;
     @Autowired
-    private JwtRequestFilter jwtRequestFilter;
-    @Autowired
     private SeatPriceService seatPriceService;
     @Autowired
     private ShowtimeService showtimeService;
     @Autowired
     private MovieRepository movieRepository;
     @Autowired
-    private MappingService mappingService;
-    @Autowired
     private RoomRepository roomRepository;
-    @Autowired
-    private SeatRepository seatRepository;
 
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Showtime>>>> getAll(
