@@ -143,7 +143,7 @@ public class ShowtimeService {
                 showtime.setUpdatedAt(null);
                 showtime.setCreatedBy(user);
                 showtime.setMovie(createShowtime.getMovie());
-                showtime.setRoom(createShowtime.getRoom());
+                showtime.setRoom(roomRepository.findById(createShowtime.getRoom().getId()).get());
                 showtime.setStartTime(currentDate.atTime(time.getStartTime()));
                 showtime.setEndTime(currentDate.atTime(time.getEndTime()));
                 showtime.setDeleted(false);
