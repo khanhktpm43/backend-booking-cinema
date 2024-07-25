@@ -32,6 +32,4 @@ public class CustomerOrderController {
         Page<DetailResponse<CustomerOrder>> responses = service.getAll(page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
-
-
 }

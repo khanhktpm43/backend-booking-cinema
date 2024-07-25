@@ -1,9 +1,12 @@
 package com.dev.booking.Controller;
 
 import com.dev.booking.Entity.Booking;
+import com.dev.booking.Entity.User;
 import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.BookingRepository;
+import com.dev.booking.RequestDTO.BookingDTO;
 import com.dev.booking.ResponseDTO.DetailResponse;
+import com.dev.booking.ResponseDTO.PaymentResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.Service.BookingService;
 import com.dev.booking.Service.MappingService;
@@ -25,7 +28,7 @@ public class BookingController {
     @Autowired
     private BookingRepository bookingRepository;
     @Autowired
-    private MappingService mappingService;
+    private JwtRequestFilter jwtRequestFilter;
     @Autowired
     private BookingService bookingService;
 
@@ -48,15 +51,11 @@ public class BookingController {
     //get detail by id
 
     @PostMapping("")
-    public ResponseEntity<ResponseObject<DetailResponse<Booking>>> booking(@RequestBody Booking booking, HttpServletRequest request){
-
-       // Booking booking1 = bookingService.createBill()
-        return null;
+    public ResponseEntity<ResponseObject<PaymentResponse>> booking(@RequestBody BookingDTO booking, HttpServletRequest request) throws Exception {
+        User user = jwtRequestFilter.getUserRequest(request);
+        PaymentResponse response = bookingService.payment(booking,user, user, request.getRemoteAddr());
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
     }
-    @PostMapping("/create")
-    public ResponseEntity<ResponseObject<DetailResponse<Booking>>> create(@RequestBody Booking booking, HttpServletRequest request){
 
-        return null;
-    }
 
 }

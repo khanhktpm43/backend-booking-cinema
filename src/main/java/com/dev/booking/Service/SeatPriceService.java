@@ -41,8 +41,9 @@ private ShowtimeRepository showtimeRepository;
     }
     public float getPrice(Showtime showtime, Seat seat){
         int dayType = specialDayService.checkDayType(showtime);
-        float ticketPrice = seatPriceRepository.findPriceByDateAndCodeAndType(showtime.getStartTime(),dayType,seat.getSeatType());
+        float ticketPrice = seatPriceRepository.findPriceByDateAndCodeAndType(showtime.getStartTime(),dayType,seat.getSeatType().getId());
         return ticketPrice;
+
     }
     public List<SeatPrice> getPricingTableByShowtime(Showtime showtime){
         int dayType = specialDayService.checkDayType(showtime);

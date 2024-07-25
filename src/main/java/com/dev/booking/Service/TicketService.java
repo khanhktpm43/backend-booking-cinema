@@ -3,7 +3,7 @@ package com.dev.booking.Service;
 import com.dev.booking.Entity.*;
 import com.dev.booking.Repository.ShowtimeRepository;
 import com.dev.booking.Repository.TicketRepository;
-import com.dev.booking.RequestDTO.TicketDTO;
+
 import com.dev.booking.ResponseDTO.ShowtimeResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

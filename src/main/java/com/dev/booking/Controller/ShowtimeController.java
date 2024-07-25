@@ -3,6 +3,7 @@ package com.dev.booking.Controller;
 import com.dev.booking.Entity.*;
 import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.*;
+import com.dev.booking.RequestDTO.CreateShowtimeRequest;
 import com.dev.booking.ResponseDTO.*;
 import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.SeatPriceService;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -87,20 +89,31 @@ public class ShowtimeController {
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
 
-    @PostMapping("")
-    public ResponseEntity<ResponseObject<DetailResponse<Showtime>>> create(@RequestBody Showtime showtime, HttpServletRequest request) {
-        if (showtimeRepository.isValid(showtime)) {
-            if (movieRepository.existsByIdAndDeleted(showtime.getMovie().getId(), true))
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("movie has been deleted", null));
-            if (roomRepository.existsById(showtime.getRoom().getId())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("Invalid room", null));
-            }
-            DetailResponse<Showtime> response = showtimeService.create(request, showtime); // new DetailResponse<>(showtime1, showtime1.getCreatedBy(), null);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("invalid", null));
-    }
+//    @PostMapping("")
+//    public ResponseEntity<ResponseObject<DetailResponse<Showtime>>> create(@RequestBody Showtime showtime, HttpServletRequest request) {
+//        if (showtimeRepository.isValid(showtime)) {
+//            if (movieRepository.existsByIdAndDeleted(showtime.getMovie().getId(), true))
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("movie has been deleted", null));
+//            if (!roomRepository.existsById(showtime.getRoom().getId())) {
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("id room does not exist", null));
+//            }
+//            DetailResponse<Showtime> response = showtimeService.create(request, showtime); // new DetailResponse<>(showtime1, showtime1.getCreatedBy(), null);
+//            return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
+//        }
+//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("invalid", null));
+//    }
 
+   @PostMapping("")
+   public ResponseEntity<ResponseObject<List<DetailResponse<Showtime>>>> create(@RequestBody CreateShowtimeRequest createShowtimeRequest, HttpServletRequest request){
+       if (movieRepository.existsByIdAndDeleted(createShowtimeRequest.getMovie().getId(), true)) {
+           return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("movie has been deleted", null));
+       }
+       if (!roomRepository.existsById(createShowtimeRequest.getRoom().getId())) {
+           return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("id room does not exist", null));
+       }
+       List<DetailResponse<Showtime>> responses = showtimeService.createShowtimes(createShowtimeRequest, request);
+       return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", responses));
+   }
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Showtime>>> update(@PathVariable Long id, @RequestBody Showtime showtime, HttpServletRequest request) {
         if (showtimeRepository.existsById(id)) {

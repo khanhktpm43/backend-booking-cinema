@@ -8,6 +8,8 @@ import com.dev.booking.Repository.RoomRepository;
 import com.dev.booking.Repository.SeatRepository;
 import com.dev.booking.Repository.ShowtimeRepository;
 import com.dev.booking.Repository.UserRepository;
+import com.dev.booking.RequestDTO.CreateShowtimeRequest;
+import com.dev.booking.RequestDTO.TimeRange;
 import com.dev.booking.ResponseDTO.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -127,5 +130,29 @@ public class ShowtimeService {
         showtime.setUpdatedBy(userReq);
         Showtime showtime1= showtimeRepository.save(showtime);
         return mappingService.mapToResponse(showtime1);
+    }
+
+    public List<DetailResponse<Showtime>> createShowtimes(CreateShowtimeRequest createShowtime, HttpServletRequest request) {
+        User user = jwtRequestFilter.getUserRequest(request);
+        List<Showtime> showtimes = new ArrayList<>();
+        LocalDate currentDate = createShowtime.getStartDate();
+        while (!currentDate.isAfter(createShowtime.getEndDate())) {
+            for (TimeRange time: createShowtime.getTimes()) {
+                Showtime showtime = new Showtime();
+                showtime.setCreatedAt(LocalDateTime.now());
+                showtime.setUpdatedAt(null);
+                showtime.setCreatedBy(user);
+                showtime.setMovie(createShowtime.getMovie());
+                showtime.setRoom(createShowtime.getRoom());
+                showtime.setStartTime(currentDate.atTime(time.getStartTime()));
+                showtime.setEndTime(currentDate.atTime(time.getEndTime()));
+                showtime.setDeleted(false);
+                if(showtimeRepository.isValid(showtime)){
+                    showtimes.add(showtime);
+                }
+            }
+            currentDate = currentDate.plusDays(1);
+        }
+        return mappingService.mapToResponse(showtimeRepository.saveAll(showtimes));
     }
 }

@@ -30,6 +30,8 @@ public class Booking extends BaseEntity {
     @Column(nullable = true)
     private float totalPrice;
 
+    private Boolean payment;
+
     @JsonIgnore
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Ticket> tickets;
