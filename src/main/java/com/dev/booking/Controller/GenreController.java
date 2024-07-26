@@ -41,8 +41,9 @@ public class GenreController {
     public ResponseEntity<ResponseObject<Page<DetailResponse<Genre>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "") String name,
             @RequestParam(defaultValue = "createdAt,desc") String[] sort){
-        Page<DetailResponse<Genre>> responses = genreService.getAll(page, size, sort);
+        Page<DetailResponse<Genre>> responses = genreService.getAll(page, size, sort, name);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
 

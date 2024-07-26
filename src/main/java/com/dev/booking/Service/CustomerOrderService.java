@@ -54,4 +54,10 @@ public class CustomerOrderService {
         Page<CustomerOrder> customerOrders = customerOrderRepository.findAll( pageable);
         return mappingService.mapToResponse(customerOrders);
     }
+    public List<OrderFoodDTO> getDTOByBookingId( Long id){
+        return customerOrderRepository.findAllByBookingId(id);
+    }
+    public void deletedByBooking(Booking booking){
+        customerOrderRepository.deleteByBooking(booking);
+    }
 }

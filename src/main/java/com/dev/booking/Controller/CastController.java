@@ -35,8 +35,8 @@ public class CastController {
     private CastService castService;
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject<Page<DetailResponse<Cast>>>> getAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "createdAt,desc") String[] sort) {
-        Page<DetailResponse<Cast>> responses = castService.getAll(page, size, sort);
+    public ResponseEntity<ResponseObject<Page<DetailResponse<Cast>>>> getAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "createdAt,desc") String[] sort,  @RequestParam(defaultValue = "") String name) {
+        Page<DetailResponse<Cast>> responses = castService.getAll(page, size, sort, name);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
     @GetMapping("/{id}")

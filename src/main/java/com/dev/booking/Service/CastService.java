@@ -45,10 +45,15 @@ public class CastService {
         return mappingService.mapToResponse(newCast);
     }
 
-    public Page<DetailResponse<Cast>> getAll(int page, int size, String[] sort) {
+    public Page<DetailResponse<Cast>> getAll(int page, int size, String[] sort, String name) {
         Sort.Direction direction = Sort.Direction.fromString(sort[1]);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<Cast> casts = castRepository.findAll(pageable);
+        Page<Cast> casts;
+        if (name == null || name.isEmpty()) {
+            casts = castRepository.findAll(pageable);
+            return mappingService.mapToResponse(casts);
+        }
+        casts = castRepository.findByNameContainingIgnoreCase(name, pageable);
         return mappingService.mapToResponse(casts);
     }
 

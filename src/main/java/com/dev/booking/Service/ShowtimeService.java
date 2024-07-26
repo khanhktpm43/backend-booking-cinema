@@ -22,6 +22,7 @@ import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,6 +66,14 @@ public class ShowtimeService {
             responses.add(response);
         }
         return responses;
+    }
+    public Map<LocalDate, List<Showtime>> getShowtimesByMovie(Long movieId) {
+        List<Showtime> showtimes = showtimeRepository.findShowtimesByMovieAndStartTime(movieId);
+
+        return showtimes.stream()
+                .collect(Collectors.groupingBy(
+                        showtime -> showtime.getStartTime().toLocalDate()
+                ));
     }
     private List<ShowtimeDTO> parseShowtimeList(String listColumn) {
         List<ShowtimeDTO> showtimeDtos = new ArrayList<>();

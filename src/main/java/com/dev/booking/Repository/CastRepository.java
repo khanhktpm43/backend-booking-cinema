@@ -10,4 +10,5 @@ import org.springframework.stereotype.Repository;
 public interface CastRepository extends JpaRepository<Cast, Long> {
     boolean existsByName(String name);
 
+    Page<Cast> findByNameContainingIgnoreCase(String name, Pageable pageable);
 }
