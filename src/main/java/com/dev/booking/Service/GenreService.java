@@ -40,7 +40,7 @@ public class GenreService {
             genres = genreRepository.findAll(pageable);
             return mappingService.mapToResponse(genres);
         }
-        genres = genreRepository.findByNameContainingIgnoreCase(name, page);
+        genres = genreRepository.findByNameContainingIgnoreCase(name, pageable);
         return mappingService.mapToResponse(genres);
     }
 

@@ -37,7 +37,6 @@ public class MovieCastController {
     @Autowired
     private CastRepository castRepository;
 
-
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<MovieCast>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
