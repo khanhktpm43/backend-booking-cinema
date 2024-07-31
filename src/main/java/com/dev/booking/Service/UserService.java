@@ -12,6 +12,7 @@ import com.dev.booking.Repository.UserRoleRepository;
 import com.dev.booking.RequestDTO.CreateUserRequest;
 import com.dev.booking.RequestDTO.LoginDTO;
 import com.dev.booking.RequestDTO.RegisterRequest;
+import com.dev.booking.RequestDTO.UserInfoDTO;
 import com.dev.booking.ResponseDTO.TokenDTO;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
 import com.dev.booking.ResponseDTO.UserDetailResponse;
@@ -177,8 +178,14 @@ public class UserService {
 
     }
 
-    public Page<UserDetailResponse> getAll(Pageable pageable){
-        Page<User> usersPage = userRepository.findAll(pageable);
+    public Page<UserDetailResponse> getAll(String name, Pageable pageable) {
+        Page<User> usersPage;
+
+        if (name == null || name.isEmpty()) {
+            usersPage = userRepository.findAll(pageable);
+        } else {
+            usersPage = userRepository.findByNameContainingIgnoreCase(name, pageable);
+        }
 
         return usersPage.map(user -> {
             UserBasicDTO createdBy = convertToCreatedBasicDto(user);
@@ -218,5 +225,15 @@ public class UserService {
         dto.setName(user.getUpdatedBy().getName());
         dto.setEmail(user.getUpdatedBy().getEmail());
         return dto;
+    }
+
+    public User updateInfo(HttpServletRequest request, UserInfoDTO info) {
+        User user = jwtRequestFilter.getUserRequest(request);
+        user.setName(info.getName());
+        user.setEmail(info.getEmail());
+        user.setPhone(info.getPhone());
+        user.setUpdatedBy(user);
+        user.setUpdatedAt(LocalDateTime.now());
+        return userRepository.save(user);
     }
 }

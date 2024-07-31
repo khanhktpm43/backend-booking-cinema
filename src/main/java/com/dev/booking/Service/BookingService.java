@@ -23,9 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class BookingService {
@@ -49,7 +47,7 @@ public class BookingService {
             booking.setCreatedAt(LocalDateTime.now());
             booking.setCreatedBy(createdBy);
             booking.setUpdatedAt(null);
-            booking.setPayment(false);
+            booking.setTransactionId(null);
             Booking newBooking = repository.save(booking);
             List<OrderFoodDTO> foods = new ArrayList<>();
             List<CustomerOrder> orders = customerOrderService.orderFood(createdBy, newBooking, bookingDTO.getFoodOrderList());
@@ -69,60 +67,19 @@ public class BookingService {
             }
             float totalPrice = priceFoods + priceTickets;
             newBooking.setTotalPrice(totalPrice);
-         //   newBooking.setTickets(new HashSet<>(tickets));
-         //   newBooking.setCustomerOrders(new HashSet<>(orders));
             repository.save(newBooking);
             BookingResponse bookingResponse = new BookingResponse(newBooking, seats,foods) ;
            String url = vnPayService.createPaymentUrl(newBooking.getId().toString(),(long) newBooking.getTotalPrice(), ip );
             return new PaymentResponse(bookingResponse, url);
         }
     }
-//
-//    @Transactional
-//    public DetailResponse<BillDTO> createBill(BookingDTO bookingDTO, User customer, User createdBy) {
-//        synchronized (bookingDTO.getShowtime()) {
-//            Booking booking = new Booking();
-//            booking.setBookingDate(LocalDateTime.now());
-//            booking.setUser(customer);
-//            booking.setCreatedAt(LocalDateTime.now());
-//            booking.setUpdatedBy(createdBy);
-//            booking.setUpdatedAt(null);
-//            booking.setPayment(false);
-//            Booking newBooking = repository.save(booking);
-//            List<OrderFoodDTO> foods = new ArrayList<>();
-//            List<CustomerOrder> orders = customerOrderService.orderFood(createdBy, newBooking, bookingDTO.getFoodOrderList());
-//            float priceFoods = 0;
-//            for (CustomerOrder order : orders) {
-//                OrderFoodDTO orderFoodDTO = new OrderFoodDTO(order.getFood(), order.getAmount(), order.getPrice());
-//                priceFoods += order.getPrice();
-//                foods.add(orderFoodDTO);
-//            }
-//            List<Ticket> tickets = ticketService.BookTicket(createdBy, newBooking, bookingDTO.getShowtime(), bookingDTO.getSeats());
-//            float priceTickets = 0;
-//            for (Ticket ticket : tickets) {
-//                priceTickets += ticket.getPrice();
-//            }
-//            float totalPrice = priceFoods + priceTickets;
-//            newBooking.setTotalPrice(totalPrice);
-//            newBooking.setTickets(new HashSet<>(tickets));
-//            newBooking.setCustomerOrders(new HashSet<>(orders));
-//            repository.save(newBooking);
-//            BillDTO billDTO = new BillDTO();
-//            billDTO.setCreatedAt(LocalDateTime.now());
-//            billDTO.setCustomerName(customer.getName());
-//            billDTO.setMail(customer.getEmail());
-//            billDTO.setPhone(customer.getPhone());
-//            billDTO.setFoods(foods);
-//            billDTO.setSeats(tickets);
-//            if (!tickets.isEmpty()) {
-//                billDTO.setRoom(tickets.get(0).getShowtime().getRoom().getName());
-//                billDTO.setMovieName(tickets.get(0).getShowtime().getMovie().getName());
-//                billDTO.setShowtime(tickets.get(0).getShowtime().getStartTime());
-//            }
-//            billDTO.setTotalPrice(newBooking.getTotalPrice());
-//            return new DetailResponse<>(billDTO, createdBy, null, billDTO.getCreatedAt(), null);
-//        }
-//    }
+    public BookingResponse update(Booking booking, Long transactionID){
+        booking.setUpdatedAt(LocalDateTime.now());
+        booking.setUpdatedBy(booking.getCreatedBy());
+        booking.setTransactionId(transactionID);
+        Booking booking1 =  repository.save(booking);
+        return new BookingResponse(booking1, ticketService.getDTOByBookingId(booking1.getId()), customerOrderService.getDTOByBookingId(booking1.getId()));
+    }
 
     public Page<DetailResponse<Booking>> getAll(int page, int size, String[] sort) {
         Sort.Direction direction = Sort.Direction.fromString(sort[1]);
@@ -131,8 +88,32 @@ public class BookingService {
         return mappingService.mapToResponse(bookings);
     }
 
-    public DetailResponse<Booking> getById(Long id) {
+    public DetailResponse<BookingResponse> getById(Long id) {
         Booking booking = repository.findById(id).orElseThrow();
-        return mappingService.mapToResponse(booking);
+        BookingResponse bookingResponse = new BookingResponse(booking, ticketService.getDTOByBookingId(booking.getId()), customerOrderService.getDTOByBookingId(booking.getId()));
+        return new DetailResponse<BookingResponse>(bookingResponse,booking.getCreatedBy(), booking.getUpdatedBy(), booking.getCreatedAt(), booking.getUpdatedAt());
+    }
+
+    public BookingResponse getBooking(HttpServletRequest request) {
+        Map<String, String> vnpParams = new HashMap<>();
+        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements(); ) {
+            String paramName = params.nextElement();
+            String paramValue = request.getParameter(paramName);
+            vnpParams.put(paramName, paramValue);
+        }
+        String responseCode = vnpParams.get("vnp_ResponseCode");
+        String transactionNo = vnpParams.get("vnp_TransactionNo");
+        Long txnRef = Long.valueOf(vnpParams.get("vnp_TxnRef"));
+        //String amount = vnpParams.get("vnp_Amount");
+        Booking booking = repository.findById(txnRef).orElseThrow();
+        if ("00".equals(responseCode)) {
+            return update(booking, Long.valueOf(transactionNo));
+        }
+        deleteBookingDetail(booking);
+        return null;
+    }
+    public void deleteBookingDetail(Booking booking){
+        ticketService.deleteByBooking(booking);
+        customerOrderService.deletedByBooking(booking);
     }
 }

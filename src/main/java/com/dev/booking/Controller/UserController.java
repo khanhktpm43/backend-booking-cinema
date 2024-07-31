@@ -5,6 +5,7 @@ import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.RequestDTO.CreateUserRequest;
 import com.dev.booking.RequestDTO.PasswordChangeDTO;
 import com.dev.booking.RequestDTO.RegisterRequest;
+import com.dev.booking.RequestDTO.UserInfoDTO;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.TokenDTO;
 import com.dev.booking.ResponseDTO.UserDetailResponse;
@@ -54,11 +55,12 @@ public class UserController {
     public ResponseEntity<ResponseObject<Page<UserDetailResponse>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "") String name,
             @RequestParam(defaultValue = "createdAt,desc") String[] sort
     ) {
         Sort.Direction direction = Sort.Direction.fromString(sort[1]);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<UserDetailResponse> responses = userService.getAll(pageable);
+        Page<UserDetailResponse> responses = userService.getAll(name,pageable);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
 
@@ -93,8 +95,9 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", user));
     }
     @PostMapping("")
-    public ResponseEntity<ResponseObject<User>> updateInfo(@RequestBody User user){
-        return null;
+    public ResponseEntity<ResponseObject<User>> updateInfo(@RequestBody UserInfoDTO info, HttpServletRequest request){
+        User user = userService.updateInfo(request, info);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", user));
     }
 
 

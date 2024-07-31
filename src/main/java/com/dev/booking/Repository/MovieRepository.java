@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,4 +30,14 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     Optional<Movie> findByIdAndDeleted(Long id, boolean b);
 
     boolean existsByIdAndDeleted(Long id, boolean b);
+    @Query("SELECT DISTINCT m FROM Movie m JOIN m.showtimes s " +
+            "WHERE s.startTime > :currentTime AND s.deleted = false AND m.deleted = false")
+    List<Movie> findMoviesWithActiveShowtimes(@Param("currentTime") LocalDateTime currentTime);
+    @Query("SELECT m FROM Movie m " +
+            "WHERE m.releaseDate > :currentTime " +
+            "AND m.deleted = false " +
+            "AND NOT EXISTS (SELECT s FROM Showtime s WHERE s.movie = m AND s.deleted = false)")
+    List<Movie> findMoviesUpcoming(@Param("currentTime") LocalDateTime currentTime);
+
+    Page<Movie> findByNameContainingIgnoreCaseAndDeleted(String name, boolean b, Pageable pageable);
 }

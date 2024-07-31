@@ -1,9 +1,6 @@
 package com.dev.booking.Controller;
 
-import com.dev.booking.Entity.Food;
-import com.dev.booking.Entity.Genre;
-import com.dev.booking.Entity.Movie;
-import com.dev.booking.Entity.User;
+import com.dev.booking.Entity.*;
 import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.MovieRepository;
 import com.dev.booking.Repository.UserRepository;
@@ -13,6 +10,7 @@ import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
 import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.MovieService;
+import com.dev.booking.Service.ShowtimeService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -26,7 +24,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -40,13 +40,16 @@ public class MovieController {
     private MovieRepository movieRepository;
     @Autowired
     private MovieService movieService;
+    @Autowired
+    private ShowtimeService showtimeService;
 
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Movie>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "") String name,
             @RequestParam(defaultValue = "createdAt,desc") String[] sort) {
-        Page<DetailResponse<Movie>> result = movieService.getAllByDeleted(false, page, size, sort);
+        Page<DetailResponse<Movie>> result = movieService.getAllByDeleted(false, page, size, sort, name);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
 
@@ -54,9 +57,26 @@ public class MovieController {
     public ResponseEntity<ResponseObject<Page<DetailResponse<Movie>>>> getAllByDeleted(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "") String name,
             @RequestParam(defaultValue = "createdAt,desc") String[] sort) {
-        Page<DetailResponse<Movie>> result = movieService.getAllByDeleted(true, page, size, sort);
+        Page<DetailResponse<Movie>> result = movieService.getAllByDeleted(true, page, size, sort, name);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
+    }
+    @GetMapping("/current")
+    public ResponseEntity<ResponseObject<List<DetailResponse<Movie>>>> getCurrentMovies(){
+        List<DetailResponse<Movie>> responses = movieService.getMoviesWithActiveShowtimes();
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
+    }
+    @GetMapping("/upcoming")
+    public ResponseEntity<ResponseObject<List<DetailResponse<Movie>>>> getUpcomingMovies(){
+        List<DetailResponse<Movie>> responses = movieService.getMoviesUpcoming();
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
+    }
+
+    @GetMapping("/{id}/showtimes")
+    public ResponseEntity<ResponseObject<Map<LocalDate, List<Showtime>>>> getShowtime(@PathVariable Long id){
+        Map<LocalDate, List<Showtime>> response = showtimeService.getShowtimesByMovie(id);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
     }
 
     @GetMapping("/{id}")

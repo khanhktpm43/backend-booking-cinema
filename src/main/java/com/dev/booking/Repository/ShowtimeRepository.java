@@ -25,6 +25,8 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Long> {
             "WHERE DATE(s.start_time) = :date AND s.deleted = false " +
             "GROUP BY s.movieid", nativeQuery = true)
     List<Object[]> findShowtimesByDate(@Param("date") LocalDate date);
+    @Query("SELECT s FROM Showtime s WHERE s.movie.id = :movieId AND s.deleted = false AND s.startTime >= CURRENT_TIMESTAMP ORDER BY s.startTime")
+    List<Showtime> findShowtimesByMovieAndStartTime(Long movieId);
 
     Page<Showtime> findByDeleted(boolean b, Pageable pageable);
 

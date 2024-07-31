@@ -32,10 +32,15 @@ public class GenreService {
     private JwtRequestFilter jwtRequestFilter;
 
 
-    public Page<DetailResponse<Genre>> getAll(int page, int size, String[] sort) {
+    public Page<DetailResponse<Genre>> getAll(int page, int size, String[] sort, String name) {
         Sort.Direction direction = Sort.Direction.fromString(sort[1]);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<Genre> genres = genreRepository.findAll(pageable);
+        Page<Genre> genres;
+        if (name == null || name.isEmpty()){
+            genres = genreRepository.findAll(pageable);
+            return mappingService.mapToResponse(genres);
+        }
+        genres = genreRepository.findByNameContainingIgnoreCase(name, pageable);
         return mappingService.mapToResponse(genres);
     }
 

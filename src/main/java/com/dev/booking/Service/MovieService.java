@@ -57,7 +57,9 @@ public class MovieService {
             User createdBy = userRepository.findById(createdId).orElse(null);
             LocalDateTime updatedAt = convertTimestampToLocalDateTime((Timestamp) result[9]);
             Long updatedId = (Long) result[10];
-            User updatedBy = userRepository.findById(updatedId).orElse(null);
+            User updatedBy =  null;
+            if (updatedId != null )
+                userRepository.findById(updatedId).orElse(null);
             Movie movie = new Movie(movieId, movieName, release, image, overview, trailer, duration, createdAt, createdBy, updatedAt, updatedBy);
             List<Genre> genres = new ArrayList<>();
             List<CastDTO> casts = new ArrayList<>();
@@ -95,12 +97,26 @@ public class MovieService {
         }
         return null;
     }
+    public List<DetailResponse<Movie>> getMoviesWithActiveShowtimes() {
+        LocalDateTime currentTime = LocalDateTime.now();
+        return mappingService.mapToResponse( movieRepository.findMoviesWithActiveShowtimes(currentTime));
+    }
 
+    public List<DetailResponse<Movie>> getMoviesUpcoming() {
+        LocalDateTime currentTime = LocalDateTime.now();
+        return mappingService.mapToResponse(movieRepository.findMoviesUpcoming(currentTime));
+    }
 
-    public Page<DetailResponse<Movie>> getAllByDeleted(boolean b, int page, int size, String[] sort) {
+    public Page<DetailResponse<Movie>> getAllByDeleted(boolean b, int page, int size, String[] sort, String name) {
         Sort.Direction direction = Sort.Direction.fromString(sort[1]);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<Movie> movies = movieRepository.findByDeleted(b, pageable);
+        Page<Movie> movies;
+        if (name == null || name.isEmpty()) {
+            movies = movieRepository.findByDeleted( b, pageable);
+        } else {
+            movies = movieRepository.findByNameContainingIgnoreCaseAndDeleted(name, b, pageable);
+        }
+
         return mappingService.mapToResponse(movies);
     }
 
