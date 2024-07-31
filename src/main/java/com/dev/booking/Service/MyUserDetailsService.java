@@ -35,6 +35,6 @@ public class MyUserDetailsService implements UserDetailsService {
                 .map(userRole -> roleRepository.findById(userRole.getRole().getId())
                         .orElseThrow(() -> new IllegalStateException("Role not found")))
                 .collect(Collectors.toList());
-        return new MyUserDetails(user,roles);
+        return new MyUserDetails(user, roles);
     }
 }

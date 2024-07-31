@@ -28,10 +28,7 @@ import java.util.Map;
 public class SpecialDayController {
     @Autowired
     private SpecialDayRepository specialDayRepository;
-    @Autowired
-    private JwtRequestFilter jwtRequestFilter;
-    @Autowired
-    private MappingService mappingService;
+
     @Autowired
     private SpecialDayService specialDayService;
     @GetMapping("")

@@ -39,7 +39,7 @@ public class VNPayService {
         StringBuilder query = new StringBuilder();
         for (String fieldName : fieldNames) {
             String fieldValue = vnpParams.get(fieldName);
-            if (fieldValue != null && fieldValue.length() > 0) {
+            if (fieldValue != null && !fieldValue.isEmpty()) {
                 hashData.append(fieldName).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.name())).append('&');
                 query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.name())).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.name())).append('&');
             }
@@ -70,43 +70,4 @@ public class VNPayService {
         return new String(hexChars);
     }
 
-    public boolean validateReturnUrl(Map<String, String> vnpParams) throws UnsupportedEncodingException {
-        String vnpSecureHash = vnpParams.remove("vnp_SecureHash");
-
-        // Sắp xếp các tham số theo thứ tự bảng chữ cái
-        List<String> fieldNames = new ArrayList<>(vnpParams.keySet());
-        Collections.sort(fieldNames);
-
-        StringBuilder hashData = new StringBuilder();
-        for (String fieldName : fieldNames) {
-            String fieldValue = vnpParams.get(fieldName);
-            if (fieldValue != null && !fieldValue.isEmpty()) {
-                hashData.append(fieldName).append('=')
-                        .append(URLDecoder.decode(fieldValue, StandardCharsets.US_ASCII.name()))
-                        .append('&');
-            }
-        }
-
-        // Xóa ký tự '&' cuối cùng
-        if (hashData.length() > 0) {
-            hashData.setLength(hashData.length() - 1);
-        }
-
-        try {
-            // Tính toán chữ ký từ dữ liệu hashData
-            String calculatedHash = hmacSHA512(vnPayConfig.getVnpHashSecret(), hashData.toString());
-
-            // Ghi lại kết quả để gỡ lỗi
-            System.out.println("Received Secure Hash: " + vnpSecureHash);
-            System.out.println("Calculated Secure Hash: " + calculatedHash);
-            System.out.println("Hash Data String: " + hashData.toString());
-
-            // So sánh chữ ký
-            return vnpSecureHash.equalsIgnoreCase(calculatedHash);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
 }

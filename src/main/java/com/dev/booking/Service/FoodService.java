@@ -36,22 +36,23 @@ public class FoodService {
         Food food1 = foodRepository.save(food);
         return new DetailResponse<>(food1, food1.getCreatedBy(), null, food1.getCreatedAt(), null);
     }
+
     public DetailResponse<Food> update(HttpServletRequest request, Long id, MultipartFile file, String name, float price) throws IOException {
         Food food = Food.builder().name(name).image(file.getBytes()).price(price).build();
         food.setId(id);
         return update(request, food);
     }
 
-    public DetailResponse<Food> update( HttpServletRequest request, Food food) {
+    public DetailResponse<Food> update(HttpServletRequest request, Food food) {
         Food food1 = foodRepository.findById(food.getId()).orElseThrow();
-            User userReq = jwtRequestFilter.getUserRequest(request);
-            food1.setName(food.getName());
-            food1.setPrice(food.getPrice());
-            food1.setImage(food.getImage());
-            food1.setUpdatedBy(userReq);
-            food1.setUpdatedAt(LocalDateTime.now());
-            foodRepository.save(food1);
-            return new DetailResponse<>(food1, food1.getCreatedBy(), food1.getCreatedBy(), food1.getCreatedAt(), food1.getUpdatedAt());
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        food1.setName(food.getName());
+        food1.setPrice(food.getPrice());
+        food1.setImage(food.getImage());
+        food1.setUpdatedBy(userReq);
+        food1.setUpdatedAt(LocalDateTime.now());
+        foodRepository.save(food1);
+        return new DetailResponse<>(food1, food1.getCreatedBy(), food1.getCreatedBy(), food1.getCreatedAt(), food1.getUpdatedAt());
     }
 
     public Page<DetailResponse<Food>> getAll(int page, int size, String[] sort) {

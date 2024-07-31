@@ -94,7 +94,7 @@ public class UserController {
         User user = userRepository.save(userReq);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", user));
     }
-    @PostMapping("")
+    @PutMapping("")
     public ResponseEntity<ResponseObject<User>> updateInfo(@RequestBody UserInfoDTO info, HttpServletRequest request){
         User user = userService.updateInfo(request, info);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", user));

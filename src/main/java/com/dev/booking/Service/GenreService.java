@@ -36,7 +36,7 @@ public class GenreService {
         Sort.Direction direction = Sort.Direction.fromString(sort[1]);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
         Page<Genre> genres;
-        if (name == null || name.isEmpty()){
+        if (name == null || name.isEmpty()) {
             genres = genreRepository.findAll(pageable);
             return mappingService.mapToResponse(genres);
         }
@@ -61,12 +61,12 @@ public class GenreService {
 
     public DetailResponse<Genre> update(HttpServletRequest request, Long id, Genre genre) {
         User userReq = jwtRequestFilter.getUserRequest(request);
-            Genre genre1 = genreRepository.findById(id).orElseThrow();
-            genre1.setName(genre.getName());
-            genre1.setUpdatedAt(LocalDateTime.now());
-            genre1.setUpdatedBy(userReq);
-            Genre genre2 = genreRepository.save(genre1);
-            return mappingService.mapToResponse(genre2);
+        Genre genre1 = genreRepository.findById(id).orElseThrow();
+        genre1.setName(genre.getName());
+        genre1.setUpdatedAt(LocalDateTime.now());
+        genre1.setUpdatedBy(userReq);
+        Genre genre2 = genreRepository.save(genre1);
+        return mappingService.mapToResponse(genre2);
     }
 
     public void delete(Long id) {

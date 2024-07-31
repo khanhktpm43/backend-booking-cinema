@@ -31,23 +31,24 @@ public class SeatPriceService {
     private MappingService mappingService;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
-@Autowired
-private ShowtimeRepository showtimeRepository;
+    @Autowired
+    private ShowtimeRepository showtimeRepository;
     @Autowired
     private SeatPriceRepository seatPriceRepository;
 
-    public boolean isValid(SeatPrice seatPrice){
+    public boolean isValid(SeatPrice seatPrice) {
         return seatPrice.isValid() && seatPriceRepository.isValid(seatPrice);
     }
-    public float getPrice(Showtime showtime, Seat seat){
+
+    public float getPrice(Showtime showtime, Seat seat) {
         int dayType = specialDayService.checkDayType(showtime);
-        float ticketPrice = seatPriceRepository.findPriceByDateAndCodeAndType(showtime.getStartTime(),dayType,seat.getSeatType().getId());
-        return ticketPrice;
+        return seatPriceRepository.findPriceByDateAndCodeAndType(showtime.getStartTime(), dayType, seat.getSeatType().getId());
 
     }
-    public List<SeatPrice> getPricingTableByShowtime(Showtime showtime){
+
+    public List<SeatPrice> getPricingTableByShowtime(Showtime showtime) {
         int dayType = specialDayService.checkDayType(showtime);
-        List<SeatPrice> prices = seatPriceRepository.findPriceByDate(showtime.getStartTime(),dayType);
+        List<SeatPrice> prices = seatPriceRepository.findPriceByDate(showtime.getStartTime(), dayType);
         return prices;
     }
 
@@ -93,6 +94,6 @@ private ShowtimeRepository showtimeRepository;
     public List<DetailResponse<SeatPrice>> getPricesByShowtime(Long id) {
         Showtime showtime = showtimeRepository.findById(id).orElseThrow();
         List<SeatPrice> prices = getPricingTableByShowtime(showtime);
-        return  mappingService.mapToResponse(prices);
+        return mappingService.mapToResponse(prices);
     }
 }

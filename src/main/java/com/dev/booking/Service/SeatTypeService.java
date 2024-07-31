@@ -75,7 +75,7 @@ public class SeatTypeService {
         seatType.setDeleted(true);
         seatType.setUpdatedBy(userReq);
         seatType.setUpdatedAt(LocalDateTime.now());
-        SeatType seatType1 =  seatTypeRepository.save(seatType);
+        SeatType seatType1 = seatTypeRepository.save(seatType);
         return mappingService.mapToResponse(seatType1);
     }
 }

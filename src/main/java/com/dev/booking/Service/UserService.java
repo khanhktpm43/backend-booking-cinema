@@ -54,45 +54,47 @@ public class UserService {
 
     @Transactional
     public TokenDTO register(RegisterRequest request) {
-    try {
+        try {
 
-        User user = new User(request.getName(), request.getUserName(), request.getEmail(), request.getPhone(),passwordEncoder.encode(request.getPassWord()));
-        user.setCreatedAt(LocalDateTime.now());
-        User user1 = userRepository.save(user);
-        user1.setCreatedBy(user1);
-        userRepository.save(user1);
+            User user = new User(request.getName(), request.getUserName(), request.getEmail(), request.getPhone(), passwordEncoder.encode(request.getPassWord()));
+            user.setCreatedAt(LocalDateTime.now());
+            User user1 = userRepository.save(user);
+            user1.setCreatedBy(user1);
+            userRepository.save(user1);
             Role roleDefault = roleRepository.getByCode("ROLE_GUEST");
             UserRole userRole = new UserRole();
             userRole.setUser(user);
-            userRole.setRole(roleDefault); userRole.setCreatedBy(user1);
+            userRole.setRole(roleDefault);
+            userRole.setCreatedBy(user1);
             userRole.setCreatedAt(LocalDateTime.now());
             userRole.setUpdatedAt(null);
             userRoleRepository.save(userRole);
-        LoginDTO loginDTO = new LoginDTO(user.getUserName(), request.getPassWord());
+            LoginDTO loginDTO = new LoginDTO(user.getUserName(), request.getPassWord());
             TokenDTO tokenDTO = authService.login(loginDTO);
             return tokenDTO;
 
-    }catch (DataIntegrityViolationException e) {
+        } catch (DataIntegrityViolationException e) {
 
-        TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-        String errorMessage = "Lỗi: thông tin đã tồn tại trong hệ thống.";
-        return null;
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            String errorMessage = "Lỗi: thông tin đã tồn tại trong hệ thống.";
+            return null;
+        }
+
+
     }
 
-
-    }
     @Transactional
-    public UserDetailResponse create( HttpServletRequest request,CreateUserRequest createUserRequest) {
+    public UserDetailResponse create(HttpServletRequest request, CreateUserRequest createUserRequest) {
         try {
             User userReq = jwtRequestFilter.getUserRequest(request);
             List<Role> roles = new ArrayList<>();
-            User user = new User(createUserRequest.getUser().getName(), createUserRequest.getUser().getUserName(), createUserRequest.getUser().getEmail(), createUserRequest.getUser().getPhone(),passwordEncoder.encode(createUserRequest.getUser().getPassWord()));
+            User user = new User(createUserRequest.getUser().getName(), createUserRequest.getUser().getUserName(), createUserRequest.getUser().getEmail(), createUserRequest.getUser().getPhone(), passwordEncoder.encode(createUserRequest.getUser().getPassWord()));
             user.setCreatedAt(LocalDateTime.now());
             user.setCreatedBy(userReq);
             User user1 = userRepository.save(user);
-            UserBasicDTO createdBy =new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
+            UserBasicDTO createdBy = new UserBasicDTO(userReq.getId(), userReq.getName(), userReq.getEmail());
 
-            if( createUserRequest.getRoles().isEmpty()){
+            if (createUserRequest.getRoles().isEmpty()) {
                 Role roleDefault = roleRepository.getByCode("ROLE_GUEST");
                 UserRole userRole = new UserRole();
                 userRole.setUser(user1);
@@ -101,7 +103,7 @@ public class UserService {
                 userRole.setCreatedAt(LocalDateTime.now());
                 roles.add(roleDefault);
                 userRoleRepository.save(userRole);
-                return new UserDetailResponse(user1,createdBy,null,roles);
+                return new UserDetailResponse(user1, createdBy, null, roles);
             }
             for (Role role : createUserRequest.getRoles()) {
 
@@ -117,8 +119,8 @@ public class UserService {
                 }
 
             }
-            return  new UserDetailResponse(user1,createdBy,null,roles);
-        }catch (DataIntegrityViolationException e) {
+            return new UserDetailResponse(user1, createdBy, null, roles);
+        } catch (DataIntegrityViolationException e) {
             // In ra stack trace để debug
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             String errorMessage = "Lỗi: thông tin đã tồn tại trong hệ thống.";
@@ -127,6 +129,7 @@ public class UserService {
 
 
     }
+
     public UserDetailResponse getMyUserDetailsById(Long userId) {
         // Tìm User từ userRepository
         User user = userRepository.findById(userId)
@@ -144,15 +147,15 @@ public class UserService {
                 .collect(Collectors.toList());
 
         // Trả về đối tượng MyUserDetails
-        return new UserDetailResponse(user,createdBy,updateBy, roles);
+        return new UserDetailResponse(user, createdBy, updateBy, roles);
     }
 
     public UserDetailResponse getMyUserDetailsFromAccessToken(HttpServletRequest request) {
-        try{
+        try {
             Map<String, String> tokenAndUsername = jwtRequestFilter.getTokenAndUsernameFromRequest(request);
             String accessToken = (String) tokenAndUsername.get("accessToken");
             String username = (String) tokenAndUsername.get("username");
-            if(jwtUtil.validateToken(accessToken,username)){
+            if (jwtUtil.validateToken(accessToken, username)) {
                 if (username == null) {
                     throw new UsernameNotFoundException("Invalid access token");
                 }
@@ -171,8 +174,8 @@ public class UserService {
                 // Trả về đối tượng MyUserDetails
                 return new UserDetailResponse(user, createdBy, updateBy, roles);
             }
-            return  null;
-        } catch (Exception e){
+            return null;
+        } catch (Exception e) {
             return null;
         }
 
@@ -197,6 +200,7 @@ public class UserService {
             return new UserDetailResponse(user, createdBy, updatedBy, roles);
         });
     }
+
     public UserBasicDTO convertToCreatedBasicDto(User user) {
         if (user == null) {
             return null;
@@ -211,6 +215,7 @@ public class UserService {
         dto.setEmail(user.getCreatedBy().getEmail());
         return dto;
     }
+
     public UserBasicDTO convertToUpdatedBasicDto(User user) {
         if (user == null) {
             return null;

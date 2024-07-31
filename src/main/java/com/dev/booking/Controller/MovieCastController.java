@@ -45,14 +45,7 @@ public class MovieCastController {
         Page<DetailResponse<MovieCast>> responses = movieCastService.getAll(page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
-//    @PostMapping("/movie")
-//    public ResponseEntity<ResponseObject<List<DetailResponse<MovieCast>>>> getByMovie(@RequestBody Movie movie){
-//        if(movie.getId() == null || !movieRepository.existsById(movie.getId()))
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("movieId does not exist",null));
-//        List<MovieCast> movieCasts = movieCastRepository.findByMovie(movie);
-//        List<DetailResponse<MovieCast>> responses = mappingService.mapToResponse(movieCasts);
-//        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
-//    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<MovieCast>>> getById(@PathVariable Long id){
         if(movieCastRepository.existsById(id)){

@@ -62,11 +62,13 @@ public class MovieController {
         Page<DetailResponse<Movie>> result = movieService.getAllByDeleted(true, page, size, sort, name);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
+
     @GetMapping("/current")
     public ResponseEntity<ResponseObject<List<DetailResponse<Movie>>>> getCurrentMovies(){
         List<DetailResponse<Movie>> responses = movieService.getMoviesWithActiveShowtimes();
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
+
     @GetMapping("/upcoming")
     public ResponseEntity<ResponseObject<List<DetailResponse<Movie>>>> getUpcomingMovies(){
         List<DetailResponse<Movie>> responses = movieService.getMoviesUpcoming();

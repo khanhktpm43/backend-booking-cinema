@@ -54,6 +54,11 @@ public class BookingController {
         DetailResponse<BookingResponse> response = bookingService.getById(id);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
     }
+    @GetMapping("/User")
+    public ResponseEntity<ResponseObject<List<BookingResponse>>> getByUser(HttpServletRequest request){
+        List<BookingResponse> responses = bookingService.getByUser(request);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
+    }
 
     @PostMapping("")
     public ResponseEntity<ResponseObject<PaymentResponse>> booking(@RequestBody BookingDTO booking, HttpServletRequest request) throws Exception {
@@ -69,4 +74,5 @@ public class BookingController {
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("payment failed", null));
     }
+
 }

@@ -1,4 +1,5 @@
 package com.dev.booking.Service;
+
 import com.dev.booking.Entity.Room;
 import com.dev.booking.Entity.SeatPrice;
 import com.dev.booking.Entity.Showtime;
@@ -44,8 +45,10 @@ public class ShowtimeService {
     private JwtRequestFilter jwtRequestFilter;
     @Autowired
     private RoomRepository roomRepository;
+    @Autowired
+    private BookingService bookingService;
 
-    public DetailResponse<Showtime> getById(Long id){
+    public DetailResponse<Showtime> getById(Long id) {
         Showtime showtime = showtimeRepository.findById(id).orElse(null);
         return mappingService.mapToResponse(showtime);
     }
@@ -60,21 +63,22 @@ public class ShowtimeService {
             response.setMovie(movie.getMovie());
             response.setCasts(movie.getCasts());
             response.setGenres(movie.getGenres());
-            String showtimes = (String) result[1] ;
+            String showtimes = (String) result[1];
             List<ShowtimeDTO> showtimeDtos = parseShowtimeList(showtimes);
             response.setShowtimes(showtimeDtos);
             responses.add(response);
         }
         return responses;
     }
+
     public Map<LocalDate, List<Showtime>> getShowtimesByMovie(Long movieId) {
         List<Showtime> showtimes = showtimeRepository.findShowtimesByMovieAndStartTime(movieId);
-
         return showtimes.stream()
                 .collect(Collectors.groupingBy(
                         showtime -> showtime.getStartTime().toLocalDate()
                 ));
     }
+
     private List<ShowtimeDTO> parseShowtimeList(String listColumn) {
         List<ShowtimeDTO> showtimeDtos = new ArrayList<>();
         String[] showtimes = listColumn.split("\\|");
@@ -96,8 +100,9 @@ public class ShowtimeService {
     }
 
     public List<ShowtimeSeat> getSeatsByShowtime(Long id) {
+        bookingService.deleteBookingDetail();
         Showtime showtime = showtimeRepository.findById(id).orElseThrow();
-        return seatRepository.findByShowtime(showtime);
+        return seatRepository.findByShowtime(showtime, showtime.getRoom());
     }
 
     public DetailResponse<Showtime> create(HttpServletRequest request, Showtime showtime) {
@@ -115,12 +120,12 @@ public class ShowtimeService {
     public DetailResponse<Showtime> update(HttpServletRequest request, Long id, Showtime showtime) {
         User userReq = jwtRequestFilter.getUserRequest(request);
         Showtime showtime1 = showtimeRepository.findById(id).orElseThrow();
-            showtime.setUpdatedAt(LocalDateTime.now());
-            showtime.setUpdatedBy(userReq);
-            showtime.setCreatedAt(showtime1.getCreatedAt());
-            showtime.setCreatedBy(showtime1.getCreatedBy());
-            Showtime showtime2 =  showtimeRepository.save(showtime);
-           return mappingService.mapToResponse(showtime2);
+        showtime.setUpdatedAt(LocalDateTime.now());
+        showtime.setUpdatedBy(userReq);
+        showtime.setCreatedAt(showtime1.getCreatedAt());
+        showtime.setCreatedBy(showtime1.getCreatedBy());
+        Showtime showtime2 = showtimeRepository.save(showtime);
+        return mappingService.mapToResponse(showtime2);
     }
 
     public void delete(HttpServletRequest request, Showtime showtime) {
@@ -137,7 +142,7 @@ public class ShowtimeService {
         showtime.setDeleted(false);
         showtime.setUpdatedAt(LocalDateTime.now());
         showtime.setUpdatedBy(userReq);
-        Showtime showtime1= showtimeRepository.save(showtime);
+        Showtime showtime1 = showtimeRepository.save(showtime);
         return mappingService.mapToResponse(showtime1);
     }
 
@@ -146,7 +151,7 @@ public class ShowtimeService {
         List<Showtime> showtimes = new ArrayList<>();
         LocalDate currentDate = createShowtime.getStartDate();
         while (!currentDate.isAfter(createShowtime.getEndDate())) {
-            for (TimeRange time: createShowtime.getTimes()) {
+            for (TimeRange time : createShowtime.getTimes()) {
                 Showtime showtime = new Showtime();
                 showtime.setCreatedAt(LocalDateTime.now());
                 showtime.setUpdatedAt(null);
@@ -156,7 +161,7 @@ public class ShowtimeService {
                 showtime.setStartTime(currentDate.atTime(time.getStartTime()));
                 showtime.setEndTime(currentDate.atTime(time.getEndTime()));
                 showtime.setDeleted(false);
-                if(showtimeRepository.isValid(showtime)){
+                if (showtimeRepository.isValid(showtime)) {
                     showtimes.add(showtime);
                 }
             }

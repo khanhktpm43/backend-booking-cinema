@@ -35,14 +35,15 @@ public class SeatService {
     private MappingService mappingService;
     @Autowired
     private RoomRepository roomRepository;
+
     public List<DetailResponse<Seat>> createSeats(Room room, List<SeatDTO> seatDTOS, User userReq) {
         List<DetailResponse<Seat>> responses = new ArrayList<>();
-        for(SeatDTO seatDTO : seatDTOS){
+        for (SeatDTO seatDTO : seatDTOS) {
             Seat seat = new Seat();
             seat.setRow(seatDTO.getRow());
             seat.setRoom(room);
             seat.setColumn(seatDTO.getColumn());
-            if(seatRepository.existsByRoomAndRowAndColumnAndDeleted(room,seatDTO.getRow(),seatDTO.getColumn(),false)) {
+            if (seatRepository.existsByRoomAndRowAndColumnAndDeleted(room, seatDTO.getRow(), seatDTO.getColumn(), false)) {
                 TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
                 return responses;
             }
@@ -53,7 +54,7 @@ public class SeatService {
             seat.setCreatedBy(userReq);
             seat.setUpdatedAt(null);
             Seat seat1 = seatRepository.save(seat);
-            DetailResponse<Seat> response =mappingService.mapToResponse(seat1); // new DetailResponse<>(seat1, seat1.getCreatedBy(),null);
+            DetailResponse<Seat> response = mappingService.mapToResponse(seat1); // new DetailResponse<>(seat1, seat1.getCreatedBy(),null);
             responses.add(response);
         }
 
@@ -84,7 +85,7 @@ public class SeatService {
     public List<DetailResponse<Seat>> createSeatsByRoom(HttpServletRequest request, Long roomId, List<SeatDTO> seatDTOS) {
         User userReq = jwtRequestFilter.getUserRequest(request);
         Room room = roomRepository.findById(roomId).orElseThrow();
-        return createSeats(room,seatDTOS, userReq);
+        return createSeats(room, seatDTOS, userReq);
     }
 
     public DetailResponse<Seat> update(HttpServletRequest request, Long id, Seat seat) {
@@ -117,6 +118,6 @@ public class SeatService {
         seat.setUpdatedBy(userReq);
         seat.setUpdatedAt(LocalDateTime.now());
         Seat seat1 = seatRepository.save(seat);
-        return  mappingService.mapToResponse(seat1);
+        return mappingService.mapToResponse(seat1);
     }
 }

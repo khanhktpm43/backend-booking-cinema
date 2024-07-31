@@ -16,11 +16,11 @@ import java.time.LocalDateTime;
 @Table(name = "customer-order")
 public class CustomerOrder extends BaseEntity{
 
-    @ManyToOne
+    @ManyToOne( cascade = CascadeType.ALL)
     @JoinColumn(name = "bookingID")
     private Booking booking;
 
-    @ManyToOne
+    @ManyToOne( cascade = CascadeType.ALL)
     @JoinColumn(name = "foodID")
     private Food food;
 
@@ -29,8 +29,5 @@ public class CustomerOrder extends BaseEntity{
 
     @Column(nullable = false)
     private float price;
-
-
-
     // Getters and Setters
 }

@@ -58,6 +58,7 @@ public class SeatPriceController {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("invalid", null));
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SeatPrice>>> update(@PathVariable Long id,@RequestBody SeatPrice seatPrice, HttpServletRequest request){
        if(seatPriceRepository.existsById(id) && seatPrice.isValid()){
