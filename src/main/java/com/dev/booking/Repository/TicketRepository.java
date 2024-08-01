@@ -1,6 +1,8 @@
 package com.dev.booking.Repository;
 
 import com.dev.booking.Entity.Booking;
+import com.dev.booking.Entity.Seat;
+import com.dev.booking.Entity.Showtime;
 import com.dev.booking.Entity.Ticket;
 import com.dev.booking.RequestDTO.TicketDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,9 +22,14 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     @Modifying
     @Transactional
-    @Query("DELETE FROM Ticket t WHERE t.booking.id IN " +
-            "(SELECT b.id FROM Booking b WHERE b.bookingDate <= :cutoffDateTime AND b.transactionId IS NULL)")
-    void deleteUnpaidTickets(@Param("cutoffDateTime") LocalDateTime cutoffDateTime);
-
+    @Query("UPDATE Ticket t SET t.booked = false WHERE t.booking = :booking")
+    void updateUnpaidTickets(@Param("booking") Booking booking);
     void deleteByBooking(Booking booking);
+
+    @Query("SELECT t FROM Ticket t WHERE t.showtime = :showtime " +
+            "AND t.booking != :booking " +
+            "AND t.booked = true " +
+            "AND t.seat IN (SELECT t.seat FROM Ticket t WHERE t.showtime = :showtime AND t.booking = :booking)")
+    List<Ticket> findTicketsByConditions(@Param("showtime") Showtime showtime,
+                                         @Param("booking") Booking booking);
 }

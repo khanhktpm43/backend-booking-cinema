@@ -22,7 +22,7 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
     boolean existsByIdAndDeleted(Long id, boolean b);
 
     Optional<Seat> findByIdAndDeleted(Long id, boolean b);
-    @Query("SELECT new com.dev.booking.ResponseDTO.ShowtimeSeat(s, CASE WHEN COUNT(t.id) > 0 THEN TRUE ELSE FALSE END) " +
+    @Query("SELECT new com.dev.booking.ResponseDTO.ShowtimeSeat(s, CASE WHEN SUM(CASE WHEN t.booked = true THEN 1 ELSE 0 END) = 0 OR COUNT(t.id) = 0 THEN FALSE ELSE TRUE END ) " +
             "FROM Seat s LEFT JOIN Ticket t ON s.id = t.seat.id " +
             "AND t.showtime = :showtime " +
             "GROUP BY s.id " +

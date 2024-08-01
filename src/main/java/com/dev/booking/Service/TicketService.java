@@ -39,11 +39,16 @@ public class TicketService {
         return tickets;
     }
 
+
     public List<TicketDTO> getDTOByBookingId(Long id) {
         return ticketRepository.findAllByBookingId(id);
     }
 
     public void deleteByBooking(Booking booking) {
         ticketRepository.deleteByBooking(booking);
+    }
+
+    public void changeActiveTickets(Booking booking){
+        ticketRepository.updateUnpaidTickets(booking);
     }
 }

@@ -17,11 +17,11 @@ import java.time.LocalDateTime;
 public class Ticket extends BaseEntity{
 
     @ManyToOne()
-    @JoinColumn(name = "showtimeID")
+    @JoinColumn(name = "showtimeid")
     private Showtime showtime;
 
     @ManyToOne()
-    @JoinColumn(name = "seatID")
+    @JoinColumn(name = "seatid")
     private Seat seat;
 
     @ManyToOne()
@@ -30,6 +30,10 @@ public class Ticket extends BaseEntity{
 
     @Column(nullable = false)
     private float price;
+
+    @JsonIgnore
+    @Column(nullable = false)
+    private boolean booked = true;
 
     // Getters and Setters
 }
