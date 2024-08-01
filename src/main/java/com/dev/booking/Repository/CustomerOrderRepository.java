@@ -21,11 +21,10 @@ public interface CustomerOrderRepository extends JpaRepository<CustomerOrder,Lon
     @Query("SELECT new com.dev.booking.RequestDTO.OrderFoodDTO(co.food, co.amount, co.price) FROM CustomerOrder co WHERE co.booking.id = :bookingID")
     List<OrderFoodDTO> findAllByBookingId(@Param("bookingID") Long bookingID);
 
+
     @Modifying
     @Transactional
-    @Query("DELETE FROM CustomerOrder co WHERE co.booking.id IN " +
-            "(SELECT b.id FROM Booking b WHERE b.bookingDate <= :cutoffDateTime AND b.transactionId IS NULL)")
-    void deleteUnpaidCustomerOrders(@Param("cutoffDateTime") LocalDateTime cutoffDateTime);
-
+    @Query("UPDATE CustomerOrder co SET co.booked = false WHERE co.booking = :booking")
+    void updateUnpaidCustomerOrders(@Param("booking") Booking booking);
     void deleteByBooking(Booking booking);
 }

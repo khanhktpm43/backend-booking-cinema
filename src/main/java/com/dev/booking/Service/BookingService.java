@@ -1,9 +1,8 @@
 package com.dev.booking.Service;
 
-import com.dev.booking.Entity.Booking;
-import com.dev.booking.Entity.CustomerOrder;
-import com.dev.booking.Entity.Ticket;
-import com.dev.booking.Entity.User;
+import com.dev.booking.Entity.*;
+import com.dev.booking.Event.BookingEvent;
+import com.dev.booking.Event.BookingHandler;
 import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.BookingRepository;
 import com.dev.booking.Repository.CustomerOrderRepository;
@@ -16,8 +15,10 @@ import com.dev.booking.ResponseDTO.BillDTO;
 import com.dev.booking.ResponseDTO.BookingResponse;
 import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.PaymentResponse;
+import com.dev.booking.TestEvent.DoorBellEvent;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,9 +47,9 @@ public class BookingService {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
     @Autowired
-    private TicketRepository ticketRepository;
+    private ApplicationEventPublisher applicationEventPublisher;
     @Autowired
-    private CustomerOrderRepository customerOrderRepository;
+    private BookingHandler bookingHandler;
     @Transactional
     public PaymentResponse payment(BookingDTO bookingDTO, User customer, User createdBy, String ip) throws Exception {
         bookingDTO.setShowtime(showtimeRepository.findById(bookingDTO.getShowtime().getId()).get());
@@ -59,7 +60,8 @@ public class BookingService {
             booking.setCreatedAt(LocalDateTime.now());
             booking.setCreatedBy(createdBy);
             booking.setUpdatedAt(null);
-            booking.setTransactionId(null);
+            booking.setPaymentMethod(PaymentMethod.VN_PAY);
+            booking.setPaymentStatus(PaymentStatus.PENDING);
             Booking newBooking = repository.save(booking);
             List<OrderFoodDTO> foods = new ArrayList<>();
             List<CustomerOrder> orders = customerOrderService.orderFood(createdBy, newBooking, bookingDTO.getFoodOrderList());
@@ -79,18 +81,28 @@ public class BookingService {
             }
             float totalPrice = priceFoods + priceTickets;
             newBooking.setTotalPrice(totalPrice);
-            repository.save(newBooking);
-            BookingResponse bookingResponse = new BookingResponse(newBooking, seats, foods);
-            String url = vnPayService.createPaymentUrl(newBooking.getId().toString(), (long) newBooking.getTotalPrice(), ip);
+            Booking booking1 = repository.save(newBooking);
+            BookingResponse bookingResponse = new BookingResponse(booking1, seats, foods);
+            String url = vnPayService.createPaymentUrl(booking1.getId().toString(), (long) booking1.getTotalPrice(), ip);
+            applicationEventPublisher.publishEvent(new BookingEvent(this, booking1.getId() ));
             return new PaymentResponse(bookingResponse, url);
         }
     }
 
-    public BookingResponse update(Booking booking, Long transactionID) {
+    public BookingResponse paymentSuccess(Booking booking) {
         booking.setUpdatedAt(LocalDateTime.now());
-        booking.setUpdatedBy(booking.getCreatedBy());
-        booking.setTransactionId(transactionID);
+        booking.setUpdatedBy(null);
+        booking.setPaymentStatus(PaymentStatus.SUCCESS);
         Booking booking1 = repository.save(booking);
+        return new BookingResponse(booking1, ticketService.getDTOByBookingId(booking1.getId()), customerOrderService.getDTOByBookingId(booking1.getId()));
+    }
+    public BookingResponse paymentFailed(Booking booking){
+        booking.setUpdatedAt(LocalDateTime.now());
+        booking.setUpdatedBy(null);
+        booking.setPaymentStatus(PaymentStatus.FAILED);
+        Booking booking1 = repository.save(booking);
+        ticketService.changeActiveTickets(booking1);
+        customerOrderService.changeActiveOrders(booking1);
         return new BookingResponse(booking1, ticketService.getDTOByBookingId(booking1.getId()), customerOrderService.getDTOByBookingId(booking1.getId()));
     }
 
@@ -120,23 +132,14 @@ public class BookingService {
         Long txnRef = Long.valueOf(vnpParams.get("vnp_TxnRef"));
         Booking booking = repository.findById(txnRef).orElseThrow();
         if ("00".equals(responseCode)) {
-            return update(booking, Long.valueOf(transactionNo));
+            bookingHandler.cancelEvent(booking.getId());
+            return paymentSuccess(booking);
         }
-        deleteBookingDetail(booking);
-        return null;
+        return paymentFailed(booking);
     }
 
-    @Transactional
-    public void deleteBookingDetail(Booking booking) {
-        ticketService.deleteByBooking(booking);
-        customerOrderService.deletedByBooking(booking);
-    }
-    @Transactional
-    public void deleteBookingDetail(){
-        LocalDateTime cutoffDateTime = LocalDateTime.now().minusMinutes(15);
-        ticketRepository.deleteUnpaidTickets(cutoffDateTime);
-        customerOrderRepository.deleteUnpaidCustomerOrders(cutoffDateTime);
-    }
+
+
     public List<BookingResponse> getByUser(HttpServletRequest request) {
         User user = jwtRequestFilter.getUserRequest(request);
         List<Booking> bookings = repository.findByUserOrderByBookingDateDesc(user);
@@ -149,4 +152,10 @@ public class BookingService {
         return responses;
     }
 
+    public String retryPayment(HttpServletRequest request, Long id) {
+        User user = jwtRequestFilter.getUserRequest(request);
+        String ip = request.getRemoteAddr();
+        Booking booking = repository.findById(id).orElseThrow();
+        return null;
+    }
 }

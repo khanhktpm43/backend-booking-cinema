@@ -66,6 +66,15 @@ public class BookingController {
         PaymentResponse response = bookingService.payment(booking,user, user, request.getRemoteAddr());
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
+    @PatchMapping("/{id}")
+    public ResponseEntity<ResponseObject<Map<String, String>>> retryPayment(@PathVariable Long id, HttpServletRequest request){
+        Map<String, String> response = new HashMap<>();
+        if(!bookingRepository.existsById(id))
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("booking id does not exist", null));
+        String paymentURL = bookingService.retryPayment(request, id);
+        response.put("paymentURL", paymentURL);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
+    }
 
     @GetMapping("/return")
     public ResponseEntity<ResponseObject<BookingResponse>> paymentReturn(HttpServletRequest request) throws UnsupportedEncodingException {

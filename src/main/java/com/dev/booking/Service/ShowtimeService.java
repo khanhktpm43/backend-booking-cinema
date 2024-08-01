@@ -100,7 +100,6 @@ public class ShowtimeService {
     }
 
     public List<ShowtimeSeat> getSeatsByShowtime(Long id) {
-        bookingService.deleteBookingDetail();
         Showtime showtime = showtimeRepository.findById(id).orElseThrow();
         return seatRepository.findByShowtime(showtime, showtime.getRoom());
     }

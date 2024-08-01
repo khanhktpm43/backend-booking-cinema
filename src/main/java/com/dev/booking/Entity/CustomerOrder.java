@@ -29,5 +29,9 @@ public class CustomerOrder extends BaseEntity{
 
     @Column(nullable = false)
     private float price;
+
+    @JsonIgnore
+    @Column(nullable = false)
+    private boolean booked = true;
     // Getters and Setters
 }
