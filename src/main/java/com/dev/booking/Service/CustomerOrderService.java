@@ -30,20 +30,22 @@ public class CustomerOrderService {
     private MappingService mappingService;
 
     @Transactional
-    public List<CustomerOrder> orderFood(User user, Booking booking, List<OrderFoodDTO> orderFoodDTOS){
+    public List<CustomerOrder> orderFood(User user, Booking booking, List<OrderFoodDTO> orderFoodDTOS) {
         List<CustomerOrder> orders = new ArrayList<>();
-        for (OrderFoodDTO item : orderFoodDTOS){
-            Food food = foodRepository.findById(item.getFood().getId()).orElseThrow();
-            CustomerOrder order = new CustomerOrder();
-            order.setFood(item.getFood());
-            order.setAmount(item.getAmount());
-            order.setPrice(item.getAmount() * food.getPrice());
-            order.setBooking(booking);
-            order.setCreatedAt(LocalDateTime.now());
-            order.setCreatedBy(user);
-            order.setUpdatedAt(null);
-            CustomerOrder createdOrder = customerOrderRepository.save(order);
-            orders.add(createdOrder);
+        if (orderFoodDTOS != null) {
+            for (OrderFoodDTO item : orderFoodDTOS) {
+                Food food = foodRepository.findById(item.getFood().getId()).orElseThrow();
+                CustomerOrder order = new CustomerOrder();
+                order.setFood(item.getFood());
+                order.setAmount(item.getAmount());
+                order.setPrice(item.getAmount() * food.getPrice());
+                order.setBooking(booking);
+                order.setCreatedAt(LocalDateTime.now());
+                order.setCreatedBy(user);
+                order.setUpdatedAt(null);
+                CustomerOrder createdOrder = customerOrderRepository.save(order);
+                orders.add(createdOrder);
+            }
         }
         return orders;
     }
@@ -51,13 +53,15 @@ public class CustomerOrderService {
     public Page<DetailResponse<CustomerOrder>> getAll(int page, int size, String[] sort) {
         Sort.Direction direction = Sort.Direction.fromString(sort[1]);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<CustomerOrder> customerOrders = customerOrderRepository.findAll( pageable);
+        Page<CustomerOrder> customerOrders = customerOrderRepository.findAll(pageable);
         return mappingService.mapToResponse(customerOrders);
     }
-    public List<OrderFoodDTO> getDTOByBookingId( Long id){
+
+    public List<OrderFoodDTO> getDTOByBookingId(Long id) {
         return customerOrderRepository.findAllByBookingId(id);
     }
-    public void deletedByBooking(Booking booking){
+
+    public void deletedByBooking(Booking booking) {
         customerOrderRepository.deleteByBooking(booking);
     }
 }

@@ -16,16 +16,16 @@ import java.time.LocalDateTime;
 @Table(name = "ticket")
 public class Ticket extends BaseEntity{
 
-    @ManyToOne
+    @ManyToOne()
     @JoinColumn(name = "showtimeID")
     private Showtime showtime;
 
-    @ManyToOne
+    @ManyToOne()
     @JoinColumn(name = "seatID")
     private Seat seat;
 
-    @ManyToOne
-    @JoinColumn(name = "bookingID")
+    @ManyToOne()
+    @JoinColumn(name = "bookingid")
     private Booking booking;
 
     @Column(nullable = false)

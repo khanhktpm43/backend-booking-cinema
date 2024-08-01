@@ -27,6 +27,7 @@ public class AuthController {
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Unauthorized: Invalid username or password",null));
     }
+
     @PostMapping("/refresh-token")
     public ResponseEntity<ResponseObject<TokenDTO>> refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest){
        TokenDTO tokenDTO = authService.renewAccessToken(refreshTokenRequest);

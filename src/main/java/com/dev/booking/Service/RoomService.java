@@ -28,6 +28,7 @@ public class RoomService {
     private MappingService mappingService;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
+
     public Page<DetailResponse<Room>> getByDeleted(boolean b, int page, int size, String[] sort) {
         Sort.Direction direction = Sort.Direction.fromString(sort[1]);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
@@ -41,7 +42,7 @@ public class RoomService {
     }
 
     public List<DetailResponse<Seat>> getSeats(Long id) {
-        List<Seat> sortedSeats =roomRepository.findSeatsInRoomSortedByRowAndColumn(id);
+        List<Seat> sortedSeats = roomRepository.findSeatsInRoomSortedByRowAndColumn(id);
         return mappingService.mapToResponse(sortedSeats);
     }
 

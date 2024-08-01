@@ -26,8 +26,9 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
             "FROM Seat s LEFT JOIN Ticket t ON s.id = t.seat.id " +
             "AND t.showtime = :showtime " +
             "GROUP BY s.id " +
+            "HAVING s.room = :room " +
             "ORDER BY s.row ASC, s.column ASC")
-    List<ShowtimeSeat> findByShowtime(@Param("showtime") Showtime showtime);
+    List<ShowtimeSeat> findByShowtime(@Param("showtime") Showtime showtime, @Param("room") Room room);
 
     boolean existsByRoomAndRowAndColumnAndDeleted(Room room, String row, int column, boolean b);
 }

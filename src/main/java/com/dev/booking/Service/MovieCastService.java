@@ -30,11 +30,6 @@ public class MovieCastService {
     private MovieCastRepository movieCastRepository;
     @Autowired
     private MappingService mappingService;
-//    public List<DetailResponse<MovieCast>> mapMovieCastToResponse(List<MovieCast> movieCasts) {
-//        return movieCasts.stream().map(movieCast -> {
-//            return new DetailResponse<>(movieCast, movieCast.getCreatedBy(), movieCast.getUpdatedBy(), movieCast.getCreatedAt(), movieCast.getUpdatedAt());
-//        }).collect(Collectors.toList());
-//    }
 
     public DetailResponse<Movie> attachCasts(HttpServletRequest request, MovieCastDTO movieCastDTO) {
         User userReq = jwtRequestFilter.getUserRequest(request);
@@ -67,7 +62,7 @@ public class MovieCastService {
         if (result == null) {
             return null;
         }
-        DetailResponse<Movie> response = new DetailResponse<>(result, result.getCreatedBy(), result.getUpdatedBy(),result.getCreatedAt(), result.getUpdatedAt());
+        DetailResponse<Movie> response = new DetailResponse<>(result, result.getCreatedBy(), result.getUpdatedBy(), result.getCreatedAt(), result.getUpdatedAt());
         return response;
     }
 

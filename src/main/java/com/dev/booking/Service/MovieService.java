@@ -57,8 +57,8 @@ public class MovieService {
             User createdBy = userRepository.findById(createdId).orElse(null);
             LocalDateTime updatedAt = convertTimestampToLocalDateTime((Timestamp) result[9]);
             Long updatedId = (Long) result[10];
-            User updatedBy =  null;
-            if (updatedId != null )
+            User updatedBy = null;
+            if (updatedId != null)
                 userRepository.findById(updatedId).orElse(null);
             Movie movie = new Movie(movieId, movieName, release, image, overview, trailer, duration, createdAt, createdBy, updatedAt, updatedBy);
             List<Genre> genres = new ArrayList<>();
@@ -97,9 +97,10 @@ public class MovieService {
         }
         return null;
     }
+
     public List<DetailResponse<Movie>> getMoviesWithActiveShowtimes() {
         LocalDateTime currentTime = LocalDateTime.now();
-        return mappingService.mapToResponse( movieRepository.findMoviesWithActiveShowtimes(currentTime));
+        return mappingService.mapToResponse(movieRepository.findMoviesWithActiveShowtimes(currentTime));
     }
 
     public List<DetailResponse<Movie>> getMoviesUpcoming() {
@@ -112,7 +113,7 @@ public class MovieService {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
         Page<Movie> movies;
         if (name == null || name.isEmpty()) {
-            movies = movieRepository.findByDeleted( b, pageable);
+            movies = movieRepository.findByDeleted(b, pageable);
         } else {
             movies = movieRepository.findByNameContainingIgnoreCaseAndDeleted(name, b, pageable);
         }
@@ -173,6 +174,6 @@ public class MovieService {
         movie.setDeleted(false);
         movie.setUpdatedAt(LocalDateTime.now());
         movie.setUpdatedBy(userReq);
-        return   movieRepository.save(movie);
+        return movieRepository.save(movie);
     }
 }

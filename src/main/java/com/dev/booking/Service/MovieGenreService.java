@@ -70,7 +70,7 @@ public class MovieGenreService {
     public DetailResponse<MovieGenre> update(HttpServletRequest request, Long id, Genre genre) {
         User userReq = jwtRequestFilter.getUserRequest(request);
         MovieGenre movieGenre1 = movieGenreRepository.findById(id).orElseThrow();
-       // movieGenre1.setMovie(movieGenre.getMovie());
+        // movieGenre1.setMovie(movieGenre.getMovie());
         movieGenre1.setGenre(genre);
         movieGenre1.setUpdatedAt(LocalDateTime.now());
         movieGenre1.setUpdatedBy(userReq);

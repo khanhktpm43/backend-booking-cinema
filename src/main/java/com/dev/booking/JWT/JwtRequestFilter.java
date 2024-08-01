@@ -22,10 +22,8 @@ import java.util.Map;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
-
     @Autowired
     private MyUserDetailsService userDetailsService;
-
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
@@ -35,18 +33,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-
-
         Map<String, String> tokenAndUsername = getTokenAndUsernameFromRequest(request);
         String accessToken = (String) tokenAndUsername.get("accessToken");
         String username = (String) tokenAndUsername.get("username");
-
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-
             if (jwtUtil.validateToken(accessToken, userDetails.getUsername())) {
-
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
                 usernamePasswordAuthenticationToken

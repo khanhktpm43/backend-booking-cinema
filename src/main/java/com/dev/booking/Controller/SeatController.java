@@ -33,8 +33,6 @@ public class SeatController {
     @Autowired
     private SeatRepository seatRepository;
     @Autowired
-    private JwtRequestFilter jwtRequestFilter;
-    @Autowired
     private MappingService mappingService;
     @Autowired
     private SeatService seatService;

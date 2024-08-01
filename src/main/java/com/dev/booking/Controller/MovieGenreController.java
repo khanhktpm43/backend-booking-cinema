@@ -45,14 +45,7 @@ public class MovieGenreController {
         Page<DetailResponse<MovieGenre>> responses = movieGenreService.getAll(page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
-//    @GetMapping("/movie")
-//    public ResponseEntity<ResponseObject<List<DetailResponse<MovieGenre>>>> getAll(@RequestBody Movie movie){
-//        if(movie.getId() == null || !movieRepository.existsById(movie.getId()))
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("movieId does not exist",null));
-//        List<MovieGenre> movieGenres = movieGenreRepository.findByMovie(movie);
-//        List<DetailResponse<MovieGenre>> responses = mappingService.mapToResponse(movieGenres);
-//        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
-//    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<MovieGenre>>> getById(@PathVariable Long id){
         if(movieGenreRepository.existsById(id)){

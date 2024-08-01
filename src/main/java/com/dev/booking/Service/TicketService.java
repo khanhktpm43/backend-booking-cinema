@@ -22,9 +22,9 @@ public class TicketService {
     private SeatPriceService seatPriceService;
 
     @Transactional
-    public List<Ticket> BookTicket(User user, Booking booking, Showtime showtime, List<Seat> seats){
+    public List<Ticket> BookTicket(User user, Booking booking, Showtime showtime, List<Seat> seats) {
         List<Ticket> tickets = new ArrayList<>();
-        for (Seat item: seats){
+        for (Seat item : seats) {
             Ticket ticket = new Ticket();
             ticket.setBooking(booking);
             ticket.setShowtime(showtime);
@@ -38,10 +38,12 @@ public class TicketService {
         }
         return tickets;
     }
-    public List<TicketDTO> getDTOByBookingId(Long id){
+
+    public List<TicketDTO> getDTOByBookingId(Long id) {
         return ticketRepository.findAllByBookingId(id);
     }
-    public void deleteByBooking(Booking booking){
+
+    public void deleteByBooking(Booking booking) {
         ticketRepository.deleteByBooking(booking);
     }
 }
