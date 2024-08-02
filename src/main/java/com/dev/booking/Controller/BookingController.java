@@ -29,6 +29,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("api/v1/bookings")
+@CrossOrigin(origins = "*")
 public class BookingController {
     @Autowired
     private BookingRepository bookingRepository;
@@ -67,11 +68,13 @@ public class BookingController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
     @PatchMapping("/{id}")
-    public ResponseEntity<ResponseObject<Map<String, String>>> retryPayment(@PathVariable Long id, HttpServletRequest request){
+    public ResponseEntity<ResponseObject<Map<String, String>>> retryPayment(@PathVariable Long id, HttpServletRequest request) throws Exception {
         Map<String, String> response = new HashMap<>();
         if(!bookingRepository.existsById(id))
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("booking id does not exist", null));
         String paymentURL = bookingService.retryPayment(request, id);
+        if(paymentURL == null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("ticket not available", null));
         response.put("paymentURL", paymentURL);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
     }

@@ -25,6 +25,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("api/v1/special-days")
+@CrossOrigin(origins = "*")
 public class SpecialDayController {
     @Autowired
     private SpecialDayRepository specialDayRepository;

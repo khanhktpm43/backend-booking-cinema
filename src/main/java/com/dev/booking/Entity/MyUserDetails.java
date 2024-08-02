@@ -27,7 +27,6 @@ public class MyUserDetails implements UserDetails {
                 .collect(Collectors.toList());
 
     }
-
     @Override
     public String getPassword() {
         return user.getPassWord();

@@ -17,22 +17,20 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig  {
+public class SecurityConfig {
+    @Autowired
+    private MyUserDetailsService userDetailsService;
+    @Autowired
+    private JwtRequestFilter jwtRequestFilter;
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-    @Autowired
-    private MyUserDetailsService userDetailsService;
-
-    @Autowired
-    private JwtRequestFilter jwtRequestFilter;
-
     @Bean
-   public DaoAuthenticationProvider authenticationProvider() {
+    public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
@@ -46,12 +44,12 @@ public class SecurityConfig  {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                     //   .requestMatchers("api/v1/auth/login", "api/v1/user/register","api/v1/user/**").permitAll()
+                        .requestMatchers("api/v1/auth/login", "api/v1/user/register").permitAll()
                         .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                ) .authenticationProvider(authenticationProvider());
+                ).authenticationProvider(authenticationProvider());
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

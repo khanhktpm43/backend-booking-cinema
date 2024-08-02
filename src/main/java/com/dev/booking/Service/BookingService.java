@@ -101,8 +101,8 @@ public class BookingService {
         booking.setUpdatedBy(null);
         booking.setPaymentStatus(PaymentStatus.FAILED);
         Booking booking1 = repository.save(booking);
-        ticketService.changeActiveTickets(booking1);
-        customerOrderService.changeActiveOrders(booking1);
+        ticketService.changeActiveTickets(booking1, false);
+        customerOrderService.changeActiveOrders(booking1, false);
         return new BookingResponse(booking1, ticketService.getDTOByBookingId(booking1.getId()), customerOrderService.getDTOByBookingId(booking1.getId()));
     }
 
@@ -132,13 +132,13 @@ public class BookingService {
         Long txnRef = Long.valueOf(vnpParams.get("vnp_TxnRef"));
         Booking booking = repository.findById(txnRef).orElseThrow();
         if ("00".equals(responseCode)) {
+            ticketService.changeActiveTickets(booking, true);
+            customerOrderService.changeActiveOrders(booking, true);
             bookingHandler.cancelEvent(booking.getId());
             return paymentSuccess(booking);
         }
         return paymentFailed(booking);
     }
-
-
 
     public List<BookingResponse> getByUser(HttpServletRequest request) {
         User user = jwtRequestFilter.getUserRequest(request);
@@ -152,10 +152,13 @@ public class BookingService {
         return responses;
     }
 
-    public String retryPayment(HttpServletRequest request, Long id) {
+    public String retryPayment(HttpServletRequest request, Long id) throws Exception {
         User user = jwtRequestFilter.getUserRequest(request);
         String ip = request.getRemoteAddr();
         Booking booking = repository.findById(id).orElseThrow();
+        if(ticketService.canRetryPayment(booking) && user == booking.getUser()){
+            return vnPayService.createPaymentUrl(booking.getId().toString(), (long) booking.getTotalPrice(), ip);
+        }
         return null;
     }
 }

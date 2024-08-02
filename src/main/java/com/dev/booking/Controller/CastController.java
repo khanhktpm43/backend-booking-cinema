@@ -28,6 +28,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/casts")
+@CrossOrigin(origins = "*")
 public class CastController {
     @Autowired
     private CastRepository castRepository;

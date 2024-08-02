@@ -38,7 +38,10 @@ public class TicketService {
         }
         return tickets;
     }
-
+    public boolean canRetryPayment(Booking booking){
+        List<Ticket> tickets = ticketRepository.findTicketsByConditions(booking);
+        return tickets.isEmpty();
+    }
 
     public List<TicketDTO> getDTOByBookingId(Long id) {
         return ticketRepository.findAllByBookingId(id);
@@ -48,7 +51,7 @@ public class TicketService {
         ticketRepository.deleteByBooking(booking);
     }
 
-    public void changeActiveTickets(Booking booking){
-        ticketRepository.updateUnpaidTickets(booking);
+    public void changeActiveTickets(Booking booking, boolean status){
+        ticketRepository.changeStatusBookedTickets(booking, status);
     }
 }

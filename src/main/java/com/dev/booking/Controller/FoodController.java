@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/v1/foods")
+@CrossOrigin(origins = "*")
 public class FoodController {
     @Autowired
     private FoodRepository foodRepository;

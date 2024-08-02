@@ -28,6 +28,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("api/v1/seat-prices")
+@CrossOrigin(origins = "*")
 public class SeatPriceController {
     @Autowired
     private SeatPriceRepository seatPriceRepository;

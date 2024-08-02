@@ -23,6 +23,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/customer-orders")
+@CrossOrigin(origins = "*")
 public class CustomerOrderController {
     @Autowired
     private CustomerOrderService service;

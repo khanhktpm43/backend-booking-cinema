@@ -30,7 +30,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/genres")
-
+@CrossOrigin(origins = "*")
 public class GenreController {
     @Autowired
     private GenreRepository genreRepository;

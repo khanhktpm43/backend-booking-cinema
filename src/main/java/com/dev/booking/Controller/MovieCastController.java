@@ -27,6 +27,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/movie-casts")
+@CrossOrigin(origins = "*")
 public class MovieCastController {
     @Autowired
     private MovieCastRepository movieCastRepository;
