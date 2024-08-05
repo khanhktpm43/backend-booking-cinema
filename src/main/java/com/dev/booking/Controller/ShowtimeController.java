@@ -32,7 +32,7 @@ public class ShowtimeController {
     @Autowired
     private SeatPriceService seatPriceService;
     @Autowired
-    private ShowtimeService showtimeService;
+    private ShowtimeService     showtimeService;
     @Autowired
     private MovieRepository movieRepository;
     @Autowired
