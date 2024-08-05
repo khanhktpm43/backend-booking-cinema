@@ -20,9 +20,9 @@ import java.util.Set;
 @Table(name = "food")
 public class Food extends BaseEntity{
 
-    @Lob
-    @Column(columnDefinition = "MEDIUMBLOB")
-    private byte[] image;
+//    @Lob
+//    @Column(columnDefinition = "MEDIUMBLOB")
+    private String image;
 
     @Column(nullable = false)
     private String name;

@@ -1,6 +1,7 @@
 package com.dev.booking.Controller;
 
 import com.dev.booking.Entity.Booking;
+import com.dev.booking.Entity.PaymentMethod;
 import com.dev.booking.Entity.User;
 import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.BookingRepository;
@@ -65,6 +66,12 @@ public class BookingController {
     public ResponseEntity<ResponseObject<PaymentResponse>> booking(@RequestBody BookingDTO booking, HttpServletRequest request) throws Exception {
         User user = jwtRequestFilter.getUserRequest(request);
         PaymentResponse response = bookingService.payment(booking,user, user, request.getRemoteAddr());
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
+    }
+    @PostMapping("/direct-payment")
+    public ResponseEntity<ResponseObject<PaymentResponse>> booking(@RequestParam(defaultValue = "") String phone, @RequestParam(defaultValue = "CASH") PaymentMethod method, @RequestBody BookingDTO booking, HttpServletRequest request) throws Exception {
+        User user = jwtRequestFilter.getUserRequest(request);
+        PaymentResponse response = bookingService.directPayment(phone, method,booking, user, request.getRemoteAddr());
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
     @PatchMapping("/{id}")

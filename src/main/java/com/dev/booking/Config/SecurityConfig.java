@@ -25,6 +25,8 @@ public class SecurityConfig {
     private MyUserDetailsService userDetailsService;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
+
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

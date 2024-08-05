@@ -47,9 +47,7 @@ public class TicketService {
         return ticketRepository.findAllByBookingId(id);
     }
 
-    public void deleteByBooking(Booking booking) {
-        ticketRepository.deleteByBooking(booking);
-    }
+
 
     public void changeActiveTickets(Booking booking, boolean status){
         ticketRepository.changeStatusBookedTickets(booking, status);

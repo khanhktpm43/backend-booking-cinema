@@ -5,6 +5,7 @@ import com.dev.booking.Entity.Seat;
 import com.dev.booking.Entity.Showtime;
 import com.dev.booking.Entity.Ticket;
 import com.dev.booking.RequestDTO.TicketDTO;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
