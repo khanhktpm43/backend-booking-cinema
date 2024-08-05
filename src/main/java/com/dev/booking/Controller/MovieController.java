@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/v1/movies")
+@CrossOrigin(origins = "*")
 public class MovieController {
     @Autowired
     private MovieRepository movieRepository;

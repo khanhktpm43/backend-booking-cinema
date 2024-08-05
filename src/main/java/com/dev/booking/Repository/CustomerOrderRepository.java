@@ -24,7 +24,7 @@ public interface CustomerOrderRepository extends JpaRepository<CustomerOrder,Lon
 
     @Modifying
     @Transactional
-    @Query("UPDATE CustomerOrder co SET co.booked = false WHERE co.booking = :booking")
-    void updateUnpaidCustomerOrders(@Param("booking") Booking booking);
+    @Query("UPDATE CustomerOrder co SET co.booked = :status WHERE co.booking = :booking")
+    void changeStatusCustomerOrders(@Param("booking") Booking booking, @Param("status") boolean status);
     void deleteByBooking(Booking booking);
 }

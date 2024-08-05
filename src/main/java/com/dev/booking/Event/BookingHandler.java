@@ -7,6 +7,7 @@ import com.dev.booking.Service.CustomerOrderService;
 import com.dev.booking.Service.TicketService;
 import com.dev.booking.TestEvent.DoorBellEvent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.diagnostics.FailureAnalysis;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -30,8 +31,8 @@ public class BookingHandler {
         ScheduledFuture<?> scheduledFuture = scheduler.schedule(() -> {
             if(repository.existsById(bookingId)){
                 Booking booking = repository.findById(bookingId).orElseThrow();
-                ticketService.changeActiveTickets(booking);
-                customerOrderService.changeActiveOrders(booking);
+                ticketService.changeActiveTickets(booking, false);
+                customerOrderService.changeActiveOrders(booking, false);
                 booking.setPaymentStatus(PaymentStatus.FAILED);
                 repository.save(booking);
             }

@@ -16,6 +16,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("api/v1/roles")
+@CrossOrigin(origins = "*")
 public class RoleController {
     @Autowired
     private RoleRepository roleRepository;

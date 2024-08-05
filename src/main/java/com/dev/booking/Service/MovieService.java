@@ -10,6 +10,7 @@ import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.ResponseDTO.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,9 +22,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,13 +43,16 @@ public class MovieService {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
 
+    @Value("${upload.path}")
+    private String uploadPath;
+
     public MovieResponse getById(Long id) {
         List<Object[]> results = movieRepository.findDetailById(id);
         if (!results.isEmpty()) {
             Object[] result = results.get(0); // Chỉ lấy một kết quả đầu tiên
             Long movieId = (Long) result[0];
             Integer duration = (Integer) result[1];
-            byte[] image = (byte[]) result[2];
+            String image = (String) result[2];
             String movieName = (String) result[3];
             byte[] blobData = (byte[]) result[4];
             String overview = new String(blobData, StandardCharsets.UTF_8);
@@ -123,13 +130,14 @@ public class MovieService {
 
     public DetailResponse<Movie> create(HttpServletRequest request, String name, LocalDateTime releaseDate, String overview, int duration, MultipartFile image, String trailer) {
         User userReq = jwtRequestFilter.getUserRequest(request);
-        try {
+
             Movie movie = new Movie();
             movie.setName(name);
             movie.setReleaseDate(releaseDate);
             movie.setOverview(overview);
             movie.setDuration(duration);
-            movie.setImage(image.getBytes());
+            movie.setImage(uploadImage(image));
+           // movie.setImage(image.getBytes());
             movie.setTrailer(trailer);
             movie.setCreatedAt(LocalDateTime.now());
             movie.setCreatedBy(userReq);
@@ -137,6 +145,21 @@ public class MovieService {
             Movie newMovie = movieRepository.save(movie);
             DetailResponse<Movie> response = new DetailResponse<>(newMovie, newMovie.getCreatedBy(), null, newMovie.getCreatedAt(), newMovie.getUpdatedAt());
             return response;
+
+    }
+    private String uploadImage(MultipartFile file){
+        if (file.isEmpty()) {
+            return null;
+        }
+        try {
+            File dir = new File(uploadPath);
+            if (!dir.exists()) dir.mkdirs();
+            String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+            String originalFilename = Paths.get(file.getOriginalFilename()).getFileName().toString();
+            String newFilename = timestamp + "_" + originalFilename;
+            File serverFile = new File(dir.getAbsolutePath() + File.separator + newFilename);
+            file.transferTo(serverFile);
+            return "/uploads/" + newFilename;
         } catch (IOException e) {
             return null;
         }
@@ -150,7 +173,9 @@ public class MovieService {
         movie.setReleaseDate(releaseDate);
         movie.setOverview(overview);
         movie.setDuration(duration);
-        movie.setImage(image.getBytes());
+        if(!image.isEmpty()){
+            movie.setImage(uploadImage(image));
+        }
         movie.setTrailer(trailer);
         movie.setUpdatedAt(LocalDateTime.now());
         movie.setUpdatedBy(userReq);

@@ -23,9 +23,9 @@ public class Movie  extends BaseEntity{
     @Column(nullable = false)
     private LocalDateTime releaseDate;
 
-    @Lob
-    @Column(columnDefinition = "MEDIUMBLOB")
-    private byte[] image;
+    //@Lob
+    //@Column(columnDefinition = "MEDIUMBLOB")
+    private String image;
 
     @Lob
     @Column(columnDefinition = "LONGBLOB")
@@ -55,7 +55,7 @@ public class Movie  extends BaseEntity{
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Showtime> showtimes;
 
-    public Movie(Long movieId, String movieName, LocalDateTime release, byte[] image, String overview, String trailer, Integer duration, LocalDateTime createdAt, User createdBy, LocalDateTime updatedAt, User updatedBy) {
+    public Movie(Long movieId, String movieName, LocalDateTime release, String image, String overview, String trailer, Integer duration, LocalDateTime createdAt, User createdBy, LocalDateTime updatedAt, User updatedBy) {
         super(movieId,createdBy, updatedBy,createdAt, updatedAt);
         this.name = movieName;
         this.releaseDate = release;
@@ -65,7 +65,7 @@ public class Movie  extends BaseEntity{
         this.duration = duration;
     }
 
-    public Movie(Long id, User createdBy, User updatedBy, LocalDateTime createdAt, LocalDateTime updatedAt, String name, LocalDateTime releaseDate, byte[] image, String overview, String trailer, int duration) {
+    public Movie(Long id, User createdBy, User updatedBy, LocalDateTime createdAt, LocalDateTime updatedAt, String name, LocalDateTime releaseDate, String image, String overview, String trailer, int duration) {
         super(id, createdBy, updatedBy, createdAt, updatedAt);
         this.name = name;
         this.releaseDate = releaseDate;

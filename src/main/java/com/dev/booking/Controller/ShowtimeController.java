@@ -26,6 +26,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/showtimes")
+@CrossOrigin(origins = "*")
 public class ShowtimeController {
     @Autowired
     private ShowtimeRepository showtimeRepository;

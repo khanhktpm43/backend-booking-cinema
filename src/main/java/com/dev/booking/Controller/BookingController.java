@@ -1,6 +1,7 @@
 package com.dev.booking.Controller;
 
 import com.dev.booking.Entity.Booking;
+import com.dev.booking.Entity.PaymentMethod;
 import com.dev.booking.Entity.User;
 import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.BookingRepository;
@@ -29,6 +30,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("api/v1/bookings")
+@CrossOrigin(origins = "*")
 public class BookingController {
     @Autowired
     private BookingRepository bookingRepository;
@@ -66,12 +68,20 @@ public class BookingController {
         PaymentResponse response = bookingService.payment(booking,user, user, request.getRemoteAddr());
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
+    @PostMapping("/direct-payment")
+    public ResponseEntity<ResponseObject<PaymentResponse>> booking(@RequestParam(defaultValue = "") String phone, @RequestParam(defaultValue = "CASH") PaymentMethod method, @RequestBody BookingDTO booking, HttpServletRequest request) throws Exception {
+        User user = jwtRequestFilter.getUserRequest(request);
+        PaymentResponse response = bookingService.directPayment(phone, method,booking, user, request.getRemoteAddr());
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
+    }
     @PatchMapping("/{id}")
-    public ResponseEntity<ResponseObject<Map<String, String>>> retryPayment(@PathVariable Long id, HttpServletRequest request){
+    public ResponseEntity<ResponseObject<Map<String, String>>> retryPayment(@PathVariable Long id, HttpServletRequest request) throws Exception {
         Map<String, String> response = new HashMap<>();
         if(!bookingRepository.existsById(id))
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("booking id does not exist", null));
         String paymentURL = bookingService.retryPayment(request, id);
+        if(paymentURL == null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("ticket not available", null));
         response.put("paymentURL", paymentURL);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
     }

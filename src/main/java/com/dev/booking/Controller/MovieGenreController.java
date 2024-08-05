@@ -27,6 +27,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/movie-genres")
+@CrossOrigin(origins = "*")
 public class MovieGenreController {
     @Autowired
     private MovieGenreRepository movieGenreRepository;

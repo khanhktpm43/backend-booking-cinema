@@ -65,7 +65,7 @@ public class CustomerOrderService {
         customerOrderRepository.deleteByBooking(booking);
     }
 
-    public void changeActiveOrders(Booking booking){
-        customerOrderRepository.updateUnpaidCustomerOrders(booking);
+    public void changeActiveOrders(Booking booking, boolean status){
+        customerOrderRepository.changeStatusCustomerOrders(booking, status);
     }
 }

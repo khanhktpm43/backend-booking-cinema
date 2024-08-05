@@ -48,8 +48,8 @@ public class SeatPriceService {
 
     public List<SeatPrice> getPricingTableByShowtime(Showtime showtime) {
         int dayType = specialDayService.checkDayType(showtime);
-        List<SeatPrice> prices = seatPriceRepository.findPriceByDate(showtime.getStartTime(), dayType);
-        return prices;
+        return  seatPriceRepository.findPriceByDate(showtime.getStartTime(), dayType);
+
     }
 
     public Page<DetailResponse<SeatPrice>> getAll(int page, int size, String[] sort) {

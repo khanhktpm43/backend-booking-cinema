@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/v1/rooms")
+@CrossOrigin(origins = "*")
 public class RoomController {
     @Autowired
     private RoomRepository roomRepository;

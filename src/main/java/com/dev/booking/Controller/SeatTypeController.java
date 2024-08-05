@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/v1/seat-types")
+@CrossOrigin(origins = "*")
 public class SeatTypeController {
     @Autowired
     private SeatTypeRepository seatTypeRepository;
