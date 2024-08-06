@@ -4,6 +4,7 @@ import com.dev.booking.Entity.Booking;
 import com.dev.booking.Entity.CustomerOrder;
 import com.dev.booking.Entity.Food;
 import com.dev.booking.Entity.User;
+import com.dev.booking.Repository.BookingRepository;
 import com.dev.booking.Repository.CustomerOrderRepository;
 import com.dev.booking.Repository.FoodRepository;
 import com.dev.booking.RequestDTO.OrderFoodDTO;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class CustomerOrderService {
@@ -28,6 +30,8 @@ public class CustomerOrderService {
     private FoodRepository foodRepository;
     @Autowired
     private MappingService mappingService;
+    @Autowired
+    private BookingRepository bookingRepository;
 
     @Transactional
     public List<CustomerOrder> orderFood(User user, Booking booking, List<OrderFoodDTO> orderFoodDTOS) {
@@ -36,7 +40,7 @@ public class CustomerOrderService {
             for (OrderFoodDTO item : orderFoodDTOS) {
                 Food food = foodRepository.findById(item.getFood().getId()).orElseThrow();
                 CustomerOrder order = new CustomerOrder();
-                order.setFood(item.getFood());
+                order.setFood(food);
                 order.setAmount(item.getAmount());
                 order.setPrice(item.getAmount() * food.getPrice());
                 order.setBooking(booking);
@@ -47,6 +51,8 @@ public class CustomerOrderService {
                 orders.add(createdOrder);
             }
         }
+      //  booking.setCustomerOrders((Set<CustomerOrder>) orders);
+      //  bookingRepository.save(booking);
         return orders;
     }
 
