@@ -33,4 +33,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
             "AND t.seat IN (SELECT t3.seat FROM Ticket t3 WHERE t3.booking = :booking)")
     List<Ticket> findTicketsByConditions(@Param("booking") Booking booking);
 
+    @Query("SELECT t FROM Ticket t WHERE t.showtime.startTime < :dateTime  " +
+            "AND t.booking = :booking ")
+    List<Ticket> findTicketInvalid(@Param("booking") Booking booking, @Param("dateTime") LocalDateTime dateTime);
 }

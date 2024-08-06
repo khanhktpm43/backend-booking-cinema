@@ -16,6 +16,7 @@ import java.util.List;
 
 @Service
 public class TicketService {
+
     @Autowired
     private TicketRepository ticketRepository;
     @Autowired
@@ -40,7 +41,8 @@ public class TicketService {
     }
     public boolean canRetryPayment(Booking booking){
         List<Ticket> tickets = ticketRepository.findTicketsByConditions(booking);
-        return tickets.isEmpty();
+        List<Ticket> tickets1 = ticketRepository.findTicketInvalid(booking, LocalDateTime.now());
+        return tickets.isEmpty() && tickets1.isEmpty();
     }
 
     public List<TicketDTO> getDTOByBookingId(Long id) {
