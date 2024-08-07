@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,6 +40,7 @@ public class ShowtimeController {
     @Autowired
     private RoomRepository roomRepository;
 
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Showtime>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -47,7 +49,7 @@ public class ShowtimeController {
         Page<DetailResponse<Showtime>> responses = showtimeService.getByDeleted(false, page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/deleted")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Showtime>>>> getAllByDeleted(
             @RequestParam(defaultValue = "0") int page,
@@ -103,7 +105,7 @@ public class ShowtimeController {
 //        }
 //        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("invalid", null));
 //    }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
    @PostMapping("")
    public ResponseEntity<ResponseObject<List<DetailResponse<Showtime>>>> create(@RequestBody CreateShowtimeRequest createShowtimeRequest, HttpServletRequest request){
        if (movieRepository.existsByIdAndDeleted(createShowtimeRequest.getMovie().getId(), true)) {
@@ -115,6 +117,7 @@ public class ShowtimeController {
        List<DetailResponse<Showtime>> responses = showtimeService.createShowtimes(createShowtimeRequest, request);
        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", responses));
    }
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Showtime>>> update(@PathVariable Long id, @RequestBody Showtime showtime, HttpServletRequest request) {
         if (showtimeRepository.existsById(id)) {
@@ -126,6 +129,7 @@ public class ShowtimeController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("id does not exist or dayType invalid", null));
     }
 
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Showtime>>> delete(@PathVariable Long id, HttpServletRequest request) {
         if (showtimeRepository.existsByIdAndDeleted(id, false)) {
@@ -138,6 +142,7 @@ public class ShowtimeController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Showtime>>> restore(@PathVariable Long id, HttpServletRequest request) {
         if (!showtimeRepository.existsByIdAndDeleted(id, true)) {

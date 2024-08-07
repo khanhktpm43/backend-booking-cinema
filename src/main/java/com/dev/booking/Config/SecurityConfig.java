@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -20,6 +21,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     @Autowired
     private MyUserDetailsService userDetailsService;
@@ -46,7 +48,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("api/v1/auth/login", "api/v1/user/register").permitAll()
+                        .requestMatchers("api/v1/auth/refresh-token").authenticated()
+                        .requestMatchers("api/v1/auth/login", "api/v1/user/register","api/v1/special-days").permitAll()
+                        .requestMatchers("/api/v1/movie-casts/**", "/api/v1/movie-genres/**", "api/v1/rooms/**",
+                        "api/v1/seats/**","api/v1/seat-prices/**", "api/v1/special-days/**").hasRole("EMPLOYEE")
+                        .requestMatchers("api/v1/reports/**", "api/v1/roles/**").hasRole("ADMIN")
                         .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session

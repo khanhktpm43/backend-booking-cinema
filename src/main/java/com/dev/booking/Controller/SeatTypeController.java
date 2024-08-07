@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -30,6 +31,7 @@ public class SeatTypeController {
     @Autowired
     private SeatTypeService seatTypeService;
 
+
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<SeatType>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -38,7 +40,7 @@ public class SeatTypeController {
         Page<DetailResponse<SeatType>> result = seatTypeService.getByDeleted(false, page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/deleted")
     public ResponseEntity<ResponseObject<Page<DetailResponse<SeatType>>>> getAllByDeleted(
             @RequestParam(defaultValue = "0") int page,
@@ -48,7 +50,7 @@ public class SeatTypeController {
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
 
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> getById(@PathVariable Long id) {
         if (seatTypeRepository.existsById(id)) {
@@ -57,7 +59,7 @@ public class SeatTypeController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PostMapping("")
     public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> create(@RequestBody SeatType seatType, HttpServletRequest request) {
         Example<SeatType> example = Example.of(seatType);
@@ -67,7 +69,7 @@ public class SeatTypeController {
         DetailResponse<SeatType> response = seatTypeService.create(request, seatType);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> update(@PathVariable Long id, @RequestBody SeatType seatType, HttpServletRequest request) {
         if (seatTypeRepository.existsById(id)) {
@@ -76,7 +78,7 @@ public class SeatTypeController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> delete(@PathVariable Long id, HttpServletRequest request) {
         if (seatTypeRepository.existsByIdAndDeleted(id, false)) {
@@ -85,7 +87,7 @@ public class SeatTypeController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<SeatType>>> restore(@PathVariable Long id, HttpServletRequest request) {
         if (!seatTypeRepository.existsByIdAndDeleted(id, true)) {

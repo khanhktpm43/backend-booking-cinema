@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,6 +38,7 @@ public class GenreController {
     @Autowired
     private GenreService genreService;
 
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Genre>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -46,7 +48,7 @@ public class GenreController {
         Page<DetailResponse<Genre>> responses = genreService.getAll(page, size, sort, name);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Genre>>> getById(@PathVariable Long id) {
         if (!genreRepository.existsById(id))
@@ -54,7 +56,7 @@ public class GenreController {
         DetailResponse<Genre> response = genreService.getById(id);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PostMapping("")
     public ResponseEntity<ResponseObject<DetailResponse<Genre>>> create(@RequestBody Genre genre, HttpServletRequest request) {
         if (genreRepository.existsByName(genre.getName())) {
@@ -63,7 +65,7 @@ public class GenreController {
         DetailResponse<Genre> response = genreService.create(request, genre);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Genre>>> update(@PathVariable Long id, @RequestBody Genre genre, HttpServletRequest request) {
         if (genreRepository.existsById(id)) {
@@ -72,7 +74,7 @@ public class GenreController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Genre>>> delete(@PathVariable Long id) {
