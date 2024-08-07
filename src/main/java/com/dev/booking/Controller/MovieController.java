@@ -20,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,6 +45,7 @@ public class MovieController {
     @Autowired
     private ShowtimeService showtimeService;
 
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Movie>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -53,7 +55,7 @@ public class MovieController {
         Page<DetailResponse<Movie>> result = movieService.getAllByDeleted(false, page, size, sort, name);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/deleted")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Movie>>>> getAllByDeleted(
             @RequestParam(defaultValue = "0") int page,
@@ -91,7 +93,7 @@ public class MovieController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PostMapping("")
     public ResponseEntity<ResponseObject<DetailResponse<Movie>>> create(@RequestParam("name") String name, @RequestParam("releaseDate") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime releaseDate, @RequestParam("overview") String overview, @RequestParam("duration") int duration, @RequestParam("image") MultipartFile image, @RequestParam("trailer") String trailer, HttpServletRequest request) {
         DetailResponse<Movie> response = movieService.create(request, name, releaseDate, overview, duration, image, trailer);
@@ -99,7 +101,7 @@ public class MovieController {
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject<>("Could not save movie", null));
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Movie>>> update(@PathVariable Long id, @RequestParam("name") String name, @RequestParam("releaseDate") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime releaseDate, @RequestParam("overview") String overview, @RequestParam("duration") int duration, @RequestParam("image") MultipartFile image, @RequestParam("trailer") String trailer, HttpServletRequest request) throws IOException {
         if (movieRepository.existsById(id)) {
@@ -108,7 +110,7 @@ public class MovieController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseObject<Movie>> softDelete(@PathVariable Long id, HttpServletRequest request) {
         if (movieRepository.existsByIdAndDeleted(id, false)) {
@@ -117,7 +119,7 @@ public class MovieController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<ResponseObject<Movie>> restore(@PathVariable Long id, HttpServletRequest request) {
         if (!movieRepository.existsByIdAndDeleted(id, true)) {

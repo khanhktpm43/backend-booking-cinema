@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -36,6 +37,7 @@ public class UserRoleController {
     private UserRepository userRepository;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/")
     public ResponseEntity<ResponseObject<UserDetailResponse>> assignRole(@RequestBody UserRoleRequest request , HttpServletRequest httpRequest){
         User userReq = jwtRequestFilter.getUserRequest(httpRequest);
@@ -75,6 +77,7 @@ public class UserRoleController {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("User not exist",null));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping ("/{id}")
     ResponseEntity<ResponseObject<UserDetailResponse>> removeRole(@PathVariable Long id){
         if(userRoleRepository.existsById(id)){

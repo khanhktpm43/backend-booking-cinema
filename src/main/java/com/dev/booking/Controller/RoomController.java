@@ -22,6 +22,7 @@ import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,6 +51,7 @@ public class RoomController {
         Page<DetailResponse<Room>> result = roomService.getByDeleted(false, page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/deleted")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Room>>>> getAllByDeleted(
             @RequestParam(defaultValue = "0") int page,
@@ -112,6 +114,7 @@ public class RoomController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
     public  ResponseEntity<ResponseObject<Room>> restore(@PathVariable Long id, HttpServletRequest request){
         if (roomRepository.existsByIdAndDeleted(id, true)) {

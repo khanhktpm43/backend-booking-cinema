@@ -18,6 +18,7 @@ import org.springframework.data.domain.*;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,13 +41,13 @@ public class FoodController {
         Page<DetailResponse<Food>> responses = foodService.getAll(page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/deleted")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Food>>>> getAllByDeleted(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "createdAt,desc") String[] sort){
         Page<DetailResponse<Food>> responses = foodService.getAllByDeleted(page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Food>>> getById(@PathVariable Long id) {
         if (!foodRepository.existsById(id))
@@ -54,7 +55,7 @@ public class FoodController {
         DetailResponse<Food> response = foodService.getById(id);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PostMapping("")
     public ResponseEntity<ResponseObject<DetailResponse<Food>>> create(HttpServletRequest request, @RequestParam("file") MultipartFile file, @RequestParam("name") String name, @RequestParam("price") float price) throws IOException {
        DetailResponse<Food> food = foodService.create(request,file, name, price);
@@ -63,7 +64,7 @@ public class FoodController {
        }
        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("duplicate", null));
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Food>>> update(@PathVariable Long id, HttpServletRequest request, @RequestParam("file") MultipartFile file, @RequestParam("name") String name, @RequestParam("price") float price) throws IOException {
        if(!foodRepository.existsById(id)){
@@ -72,7 +73,7 @@ public class FoodController {
         DetailResponse<Food> response = foodService.update(request, id, file, name, price);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Food>>> delete(@PathVariable Long id, HttpServletRequest request){
         if(foodRepository.existsByIdAndDeleted(id, false)){
@@ -81,6 +82,7 @@ public class FoodController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
     public  ResponseEntity<ResponseObject<DetailResponse<Food>>> restore(@PathVariable Long id, HttpServletRequest request){
         Food food = foodRepository.findByIdAndDeleted(id, true).orElse(null);

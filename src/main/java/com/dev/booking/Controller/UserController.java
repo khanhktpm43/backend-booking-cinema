@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,6 +37,7 @@ public class UserController {
     private UserService userService;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<UserDetailResponse>> getById(@PathVariable Long id) {
         if (userRepository.existsById(id)) {
@@ -45,6 +47,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<UserDetailResponse>("id does not exist", null));
     }
 
+    @PreAuthorize("hasRole('GUEST')")
     @GetMapping("/me")
     public ResponseEntity<ResponseObject<UserDetailResponse>> getByToken(HttpServletRequest request) {
         UserDetailResponse response = userService.getMyUserDetailsFromAccessToken(request);
@@ -54,6 +57,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<UserDetailResponse>("Token invalid", null));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<UserDetailResponse>>> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -75,6 +79,7 @@ public class UserController {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("username, phone or email already exists in the system", null));
     }
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create")
     public ResponseEntity<ResponseObject<UserDetailResponse>> create(HttpServletRequest request, @RequestBody CreateUserRequest createUserRequest) {
         UserDetailResponse userDetailResponse = userService.create(request, createUserRequest);
@@ -82,6 +87,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", userDetailResponse));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("username, phone or email already exists in the system", null));
     }
+    @PreAuthorize("hasRole('GUEST')")
     @PatchMapping("/change-password")
     public ResponseEntity<ResponseObject<User>> changePassword(@RequestBody PasswordChangeDTO passwordChangeDTO, HttpServletRequest request){
         User userReq = jwtRequestFilter.getUserRequest(request);
@@ -97,6 +103,7 @@ public class UserController {
         User user = userRepository.save(userReq);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", user));
     }
+    @PreAuthorize("hasRole('GUEST')")
     @PutMapping("")
     public ResponseEntity<ResponseObject<User>> updateInfo(@RequestBody UserInfoDTO info, HttpServletRequest request){
         User user = userService.updateInfo(request, info);

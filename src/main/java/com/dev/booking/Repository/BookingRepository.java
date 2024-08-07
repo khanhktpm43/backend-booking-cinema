@@ -45,14 +45,15 @@ public interface BookingRepository extends JpaRepository<Booking,Long> {
             "ORDER BY YEAR(b.bookingDate), MONTH(b.bookingDate) ASC")
     List<MonthlyRevenue> findMonthlyRevenue(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
+
     @Query("SELECT new com.dev.booking.ResponseDTO.MovieRevenue(" +
             "s.movie.name, " +
             "SUM(CASE WHEN b.paymentStatus = com.dev.booking.Entity.PaymentStatus.SUCCESS  THEN b.totalPrice ELSE 0 END), " +
             "SUM(CASE WHEN b.paymentStatus = com.dev.booking.Entity.PaymentStatus.FAILED THEN b.totalPrice ELSE 0 END)) " +
-            "FROM Booking b " +
-            "LEFT JOIN b.tickets t " +
+            "FROM Ticket t " +
+            "LEFT JOIN t.booking b " +
             "LEFT JOIN t.showtime s " +
-            "WHERE (DATE(b.bookingDate) BETWEEN :fromDate AND :toDate) " +
-            "GROUP BY  s.movie " )
+            "WHERE (DATE(b.bookingDate) BETWEEN :fromDate AND :toDate) AND t.id IN ( SELECT MIN(t2.id) FROM Ticket t2 WHERE (DATE(t2.booking.bookingDate) BETWEEN :fromDate AND :toDate) GROUP BY t2.booking )" +
+            "GROUP BY  s.movie ")
     List<MovieRevenue> findMovieRevenue(LocalDate fromDate, LocalDate toDate);
 }

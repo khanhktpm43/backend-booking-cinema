@@ -21,16 +21,16 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@RestController
-@RequestMapping("api/v1/customer-orders")
-@CrossOrigin(origins = "*")
+//@RestController
+//@RequestMapping("api/v1/customer-orders")
+//@CrossOrigin(origins = "*")
 public class CustomerOrderController {
-    @Autowired
-    private CustomerOrderService service;
-
-    @GetMapping("")
-    public ResponseEntity<ResponseObject<Page<DetailResponse<CustomerOrder>>>> getAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "createdAt,desc") String[] sort){
-        Page<DetailResponse<CustomerOrder>> responses = service.getAll(page, size, sort);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
-    }
+//    @Autowired
+//    private CustomerOrderService service;
+//
+//    @GetMapping("")
+//    public ResponseEntity<ResponseObject<Page<DetailResponse<CustomerOrder>>>> getAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "createdAt,desc") String[] sort){
+//        Page<DetailResponse<CustomerOrder>> responses = service.getAll(page, size, sort);
+//        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
+//    }
 }

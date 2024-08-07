@@ -17,6 +17,7 @@ import org.springframework.data.domain.*;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.parameters.P;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
@@ -47,7 +48,7 @@ public class SeatController {
         Page<DetailResponse<Seat>> result = seatService.getByDeleted(false, page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", result));
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/deleted")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Seat>>>> getAllByDeleted(
             @RequestParam(defaultValue = "0") int page,
@@ -107,6 +108,7 @@ public class SeatController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Seat>>> restore(@PathVariable Long id, HttpServletRequest request) {
         if (!seatRepository.existsByIdAndDeleted(id, true)) {

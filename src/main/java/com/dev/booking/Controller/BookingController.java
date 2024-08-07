@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
@@ -39,6 +40,7 @@ public class BookingController {
     @Autowired
     private BookingService bookingService;
 
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Booking>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -48,6 +50,7 @@ public class BookingController {
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
 
+    @PreAuthorize("hasRole('GUEST')")
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<BookingResponse>>> getById(@PathVariable Long id){
         if(!bookingRepository.existsById(id)){
@@ -56,24 +59,27 @@ public class BookingController {
         DetailResponse<BookingResponse> response = bookingService.getById(id);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
     }
+    @PreAuthorize("hasRole('GUEST')")
     @GetMapping("/User")
     public ResponseEntity<ResponseObject<List<BookingResponse>>> getByUser(HttpServletRequest request){
         List<BookingResponse> responses = bookingService.getByUser(request);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
-
+    @PreAuthorize("hasRole('GUEST')")
     @PostMapping("")
     public ResponseEntity<ResponseObject<PaymentResponse>> booking(@RequestBody BookingDTO booking, HttpServletRequest request) throws Exception {
         User user = jwtRequestFilter.getUserRequest(request);
         PaymentResponse response = bookingService.payment(booking,user, user, request.getRemoteAddr());
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PostMapping("/direct-payment")
     public ResponseEntity<ResponseObject<PaymentResponse>> booking(@RequestParam(defaultValue = "") String phone, @RequestParam(defaultValue = "CASH") PaymentMethod method, @RequestBody BookingDTO booking, HttpServletRequest request) throws Exception {
         User user = jwtRequestFilter.getUserRequest(request);
         PaymentResponse response = bookingService.directPayment(phone, method,booking, user, request.getRemoteAddr());
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
+    @PreAuthorize("hasRole('GUEST')")
     @PatchMapping("/{id}")
     public ResponseEntity<ResponseObject<Map<String, String>>> retryPayment(@PathVariable Long id, HttpServletRequest request) throws Exception {
         Map<String, String> response = new HashMap<>();
@@ -86,6 +92,7 @@ public class BookingController {
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
     }
 
+    @PreAuthorize("hasRole('GUEST')")
     @GetMapping("/return")
     public ResponseEntity<ResponseObject<BookingResponse>> paymentReturn(HttpServletRequest request) throws UnsupportedEncodingException {
         BookingResponse response = bookingService.getBooking(request);
