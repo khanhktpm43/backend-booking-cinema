@@ -43,6 +43,7 @@ public class RoomController {
     private RoomService roomService;
     @Autowired
     private SeatService seatService;
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @GetMapping("")
     public ResponseEntity<ResponseObject<Page<DetailResponse<Room>>>> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -69,6 +70,7 @@ public class RoomController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
+
     @GetMapping("/{id}/seats")
     public  ResponseEntity<ResponseObject<List<DetailResponse<Seat>>>> getSeatByRoom(@PathVariable Long id){
         if(!roomRepository.existsById(id))
@@ -76,6 +78,7 @@ public class RoomController {
         List<DetailResponse<Seat>> response = roomService.getSeats(id);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
     }
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @Transactional
     @PostMapping("/{roomId}/seats")
     public ResponseEntity<ResponseObject<List<DetailResponse<Seat>>>> createSeatsByRoom(@PathVariable Long roomId, @RequestBody List<SeatDTO> seatDTOS, HttpServletRequest request){
@@ -88,6 +91,7 @@ public class RoomController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("Seat already exists, transaction rolled back.", null));
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", responses));
     }
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PostMapping("")
     public ResponseEntity<ResponseObject<DetailResponse<Room>>> create(@RequestBody Room room, HttpServletRequest request) {
         Example<Room> example = Example.of(room);
@@ -97,7 +101,7 @@ public class RoomController {
         DetailResponse<Room> response =roomService.create(request, room);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
     }
-
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Room>>> update(@PathVariable Long id, @RequestBody Room room, HttpServletRequest request) {
         if (roomRepository.existsById(id)) {
@@ -106,6 +110,7 @@ public class RoomController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist", null));
     }
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Room>>> delete(@PathVariable Long id, HttpServletRequest request){
         if(roomRepository.existsByIdAndDeleted(id, false)){

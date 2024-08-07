@@ -48,9 +48,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("api/v1/auth/refresh-token", "api/v1/users/me").authenticated()
+                        .requestMatchers("api/v1/auth/refresh-token", "api/v1/users/me","api/v1/rooms/{id}/seats").authenticated()
                         .requestMatchers("api/v1/auth/login", "api/v1/user/register","api/v1/special-days").permitAll()
-                        .requestMatchers("/api/v1/movie-casts/**", "/api/v1/movie-genres/**", "api/v1/rooms/**",
+                        .requestMatchers("/api/v1/movie-casts/**", "/api/v1/movie-genres/**",
                         "api/v1/seats/**","api/v1/seat-prices/**", "api/v1/special-days/**").hasRole("EMPLOYEE")
                         .requestMatchers("api/v1/reports/**", "api/v1/roles/**").hasRole("ADMIN")
                         .anyRequest().permitAll()
