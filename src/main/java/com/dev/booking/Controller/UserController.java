@@ -47,7 +47,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<UserDetailResponse>("id does not exist", null));
     }
 
-    @PreAuthorize("hasRole('GUEST')")
+
     @GetMapping("/me")
     public ResponseEntity<ResponseObject<UserDetailResponse>> getByToken(HttpServletRequest request) {
         UserDetailResponse response = userService.getMyUserDetailsFromAccessToken(request);
