@@ -42,6 +42,9 @@ public class SeatPriceService {
 
     public float getPrice(Showtime showtime, Seat seat) {
         int dayType = specialDayService.checkDayType(showtime);
+        System.out.println(showtime.getStartTime());
+        System.out.println(dayType);
+        System.out.println(seat.getSeatType().getId());
         return seatPriceRepository.findPriceByDateAndCodeAndType(showtime.getStartTime(), dayType, seat.getSeatType().getId());
 
     }
