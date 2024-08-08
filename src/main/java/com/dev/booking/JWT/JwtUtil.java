@@ -51,12 +51,12 @@ public class JwtUtil {
     }
 
     public String generateRefreshToken(  Map<String, Object> claims,  String username) {
-//        Map<String, Object> claims = new HashMap<>();
+
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7)) // 7 days
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10h
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
                 .compact();
     }
