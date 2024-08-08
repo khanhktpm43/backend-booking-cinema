@@ -6,6 +6,8 @@ import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.TokenDTO;
 import com.dev.booking.Service.AuthService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,5 +35,14 @@ public class AuthController {
            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", tokenDTO));
        }
         return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseObject<>("Invalid Refresh Token", null));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ResponseObject<?>> logout(HttpServletRequest request, HttpServletResponse response, @RequestBody RefreshTokenRequest refreshTokenRequest){
+        boolean result = authService.logout(request, response, refreshTokenRequest);
+        if(result){
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("success", null));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("failed", null));
     }
 }

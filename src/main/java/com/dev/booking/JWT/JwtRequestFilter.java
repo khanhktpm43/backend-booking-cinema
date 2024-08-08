@@ -1,19 +1,26 @@
 package com.dev.booking.JWT;
 
 import com.dev.booking.Entity.User;
+import com.dev.booking.Exception.LoggedOutTokenException;
 import com.dev.booking.Repository.UserRepository;
+import com.dev.booking.ResponseDTO.ResponseObject;
+import com.dev.booking.Service.BlackList;
 import com.dev.booking.Service.MyUserDetailsService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -28,14 +35,21 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private BlackList list;
 
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-            throws ServletException, IOException {
+            throws ServletException, IOException, AuthenticationException {
+    try {
+
         Map<String, String> tokenAndUsername = getTokenAndUsernameFromRequest(request);
         String accessToken = (String) tokenAndUsername.get("accessToken");
         String username = (String) tokenAndUsername.get("username");
+        if(accessToken != null && list.isTokenExists(accessToken)){
+          throw  new LoggedOutTokenException("You have been logged out");
+        }
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
             if (jwtUtil.validateToken(accessToken, userDetails.getUsername())) {
@@ -47,7 +61,19 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             }
         }
         chain.doFilter(request, response);
+    } catch (LoggedOutTokenException ex) {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("error", ex.getMessage());
+        String responseBodyString = new ObjectMapper().writeValueAsString(responseBody);
+        response.getWriter().write(responseBodyString);
     }
+    }
+
+
+
     public Map<String,String> getTokenAndUsernameFromRequest(HttpServletRequest request) {
         final String authorizationHeader = request.getHeader("Authorization");
         String accessToken = null;
