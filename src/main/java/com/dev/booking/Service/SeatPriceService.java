@@ -3,6 +3,7 @@ package com.dev.booking.Service;
 import com.dev.booking.Entity.*;
 import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.SeatPriceRepository;
+import com.dev.booking.Repository.SeatTypeRepository;
 import com.dev.booking.Repository.ShowtimeRepository;
 import com.dev.booking.Repository.UserRepository;
 import com.dev.booking.ResponseDTO.DetailResponse;
@@ -35,15 +36,17 @@ public class SeatPriceService {
     private ShowtimeRepository showtimeRepository;
     @Autowired
     private SeatPriceRepository seatPriceRepository;
-
+    @Autowired
+    private SeatTypeRepository seatTypeRepository;
     public boolean isValid(SeatPrice seatPrice) {
         return seatPrice.isValid() && seatPriceRepository.isValid(seatPrice);
     }
 
     public float getPrice(Showtime showtime, Seat seat) {
         int dayType = specialDayService.checkDayType(showtime);
-        // sau này sửa lại
-        if(seat.getSeatType().getName().equals("double")){
+
+        SeatType type = seatTypeRepository.findById(seat.getSeatType().getId()).orElseThrow();
+        if(type.getName().equals("double")){
             return seatPriceRepository.findPriceByDateAndCodeAndType(showtime.getStartTime(), dayType, seat.getSeatType().getId())/2;
         }
         return seatPriceRepository.findPriceByDateAndCodeAndType(showtime.getStartTime(), dayType, seat.getSeatType().getId());
