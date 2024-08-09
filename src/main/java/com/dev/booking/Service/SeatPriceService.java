@@ -42,6 +42,10 @@ public class SeatPriceService {
 
     public float getPrice(Showtime showtime, Seat seat) {
         int dayType = specialDayService.checkDayType(showtime);
+        // sau này sửa lại
+        if(seat.getSeatType().getName().equals("double")){
+            return seatPriceRepository.findPriceByDateAndCodeAndType(showtime.getStartTime(), dayType, seat.getSeatType().getId())/2;
+        }
         return seatPriceRepository.findPriceByDateAndCodeAndType(showtime.getStartTime(), dayType, seat.getSeatType().getId());
 
     }
