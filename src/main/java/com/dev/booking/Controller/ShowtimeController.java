@@ -117,6 +117,7 @@ public class ShowtimeController {
        List<DetailResponse<Showtime>> responses = showtimeService.createShowtimes(createShowtimeRequest, request);
        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", responses));
    }
+
     @PreAuthorize("hasRole('EMPLOYEE')")
     @PutMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<Showtime>>> update(@PathVariable Long id, @RequestBody Showtime showtime, HttpServletRequest request) {

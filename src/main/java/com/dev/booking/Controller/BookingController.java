@@ -49,7 +49,6 @@ public class BookingController {
         Page<DetailResponse<Booking>> responses = bookingService.getAll(page, size, sort);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", responses));
     }
-
     @PreAuthorize("hasRole('GUEST')")
     @GetMapping("/{id}")
     public ResponseEntity<ResponseObject<DetailResponse<BookingResponse>>> getById(@PathVariable Long id){
@@ -59,12 +58,14 @@ public class BookingController {
         DetailResponse<BookingResponse> response = bookingService.getById(id);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",response));
     }
+
     @PreAuthorize("hasRole('GUEST')")
     @GetMapping("/User")
     public ResponseEntity<ResponseObject<List<BookingResponse>>> getByUser(HttpServletRequest request){
         List<BookingResponse> responses = bookingService.getByUser(request);
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("",responses));
     }
+
     @PreAuthorize("hasRole('GUEST')")
     @PostMapping("")
     public ResponseEntity<ResponseObject<PaymentResponse>> booking(@RequestBody BookingDTO booking, HttpServletRequest request) throws Exception {
