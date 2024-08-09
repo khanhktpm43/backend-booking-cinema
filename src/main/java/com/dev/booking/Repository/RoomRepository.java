@@ -18,6 +18,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     boolean existsByIdAndDeleted(Long id, boolean b);
 
     Optional<Room> findByIdAndDeleted(Long id, boolean b);
-    @Query("SELECT s FROM Seat s WHERE s.room.id = :roomId AND s.room.deleted = false ORDER BY s.row ASC, s.column ASC")
+    @Query("SELECT s FROM Seat s WHERE s.room.id = :roomId AND s.deleted = false ORDER BY s.row ASC, s.column ASC")
     List<Seat> findSeatsInRoomSortedByRowAndColumn(Long roomId);
 }

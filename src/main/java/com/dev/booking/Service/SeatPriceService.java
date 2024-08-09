@@ -2,9 +2,7 @@ package com.dev.booking.Service;
 
 import com.dev.booking.Entity.*;
 import com.dev.booking.JWT.JwtRequestFilter;
-import com.dev.booking.Repository.SeatPriceRepository;
-import com.dev.booking.Repository.ShowtimeRepository;
-import com.dev.booking.Repository.UserRepository;
+import com.dev.booking.Repository.*;
 import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
 import com.dev.booking.ResponseDTO.UserBasicDTO;
@@ -35,6 +33,8 @@ public class SeatPriceService {
     private ShowtimeRepository showtimeRepository;
     @Autowired
     private SeatPriceRepository seatPriceRepository;
+    @Autowired
+    private SeatTypeRepository seatTypeRepository;
 
     public boolean isValid(SeatPrice seatPrice) {
         return seatPrice.isValid() && seatPriceRepository.isValid(seatPrice);
@@ -42,16 +42,11 @@ public class SeatPriceService {
 
     public float getPrice(Showtime showtime, Seat seat) {
         int dayType = specialDayService.checkDayType(showtime);
-<<<<<<< HEAD
-        System.out.println(showtime.getStartTime());
-        System.out.println(dayType);
-        System.out.println(seat.getSeatType().getId());
-=======
+        SeatType type = seatTypeRepository.findById(seat.getSeatType().getId()).orElseThrow();
         // sau này sửa lại
-        if(seat.getSeatType().getName().equals("double")){
+        if(type.getName().equals("double")){
             return seatPriceRepository.findPriceByDateAndCodeAndType(showtime.getStartTime(), dayType, seat.getSeatType().getId())/2;
         }
->>>>>>> 31bc130e6c0660957216b1734ee03d04e6dd42de
         return seatPriceRepository.findPriceByDateAndCodeAndType(showtime.getStartTime(), dayType, seat.getSeatType().getId());
 
     }
