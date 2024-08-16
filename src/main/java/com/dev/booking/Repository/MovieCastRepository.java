@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MovieCastRepository extends JpaRepository<MovieCast, Long> {
@@ -14,4 +15,8 @@ public interface MovieCastRepository extends JpaRepository<MovieCast, Long> {
 
     void deleteByMovie(Movie movie);
     void deleteByCast(Cast cast);
+
+    boolean existsByMovieIdAndCastAndRoleCast(Long id, Cast cast, int roleCast);
+
+    Optional<MovieCast> findByMovieIdAndCastAndRoleCast(Long id, Cast cast, int roleCast);
 }

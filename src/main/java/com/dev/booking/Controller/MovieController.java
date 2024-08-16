@@ -1,22 +1,16 @@
 package com.dev.booking.Controller;
 
 import com.dev.booking.Entity.*;
-import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.MovieRepository;
-import com.dev.booking.Repository.UserRepository;
+import com.dev.booking.RequestDTO.CastReq;
 import com.dev.booking.ResponseDTO.DetailResponse;
 import com.dev.booking.ResponseDTO.MovieResponse;
 import com.dev.booking.ResponseDTO.ResponseObject;
-import com.dev.booking.ResponseDTO.UserBasicDTO;
-import com.dev.booking.Service.MappingService;
 import com.dev.booking.Service.MovieService;
 import com.dev.booking.Service.ShowtimeService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,12 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/v1/movies")
@@ -100,6 +90,38 @@ public class MovieController {
         if (response != null)
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseObject<>("", response));
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseObject<>("Could not save movie", null));
+    }
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PostMapping("/{id}/assignGenre")
+    public ResponseEntity<ResponseObject<DetailResponse<MovieResponse>>> assignGenre(@PathVariable Long id, @RequestBody List<Genre> genres, HttpServletRequest request) {
+        DetailResponse<MovieResponse> response = movieService.attachGenres(request, id, genres);
+        if(response.getObject() == null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("", response));
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
+    }
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PostMapping("/{id}/assignCast")
+    public ResponseEntity<ResponseObject<DetailResponse<MovieResponse>>> assignCast(@PathVariable Long id, @RequestBody List<CastReq> casts, HttpServletRequest request) {
+        DetailResponse<MovieResponse> response = movieService.attachCast(request, id, casts);
+        if(response.getObject() == null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("", response));
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
+    }
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PutMapping("/{id}/detachGenre")
+    public ResponseEntity<ResponseObject<DetailResponse<MovieResponse>>> detachGenre(@PathVariable Long id, @RequestBody Genre genre) {
+        DetailResponse<MovieResponse> response = movieService.detachGenre( id, genre);
+        if(response.getObject() == null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("", null));
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
+    }
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PutMapping("/{id}/detachCast")
+    public ResponseEntity<ResponseObject<DetailResponse<MovieResponse>>> detachCast(@PathVariable Long id, @RequestBody CastReq cast, HttpServletRequest request) {
+        DetailResponse<MovieResponse> response = movieService.detachCast( id, cast);
+        if(response.getObject() == null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseObject<>("", null));
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseObject<>("", response));
     }
     @PreAuthorize("hasRole('EMPLOYEE')")
     @PutMapping("/{id}")

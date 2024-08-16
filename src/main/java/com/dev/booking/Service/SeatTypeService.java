@@ -30,7 +30,7 @@ public class SeatTypeService {
     public Page<DetailResponse<SeatType>> getByDeleted(boolean b, int page, int size, String[] sort) {
         Sort.Direction direction = Sort.Direction.fromString(sort[1]);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<SeatType> seatTypes = seatTypeRepository.findAllByDeleted(false, pageable);
+        Page<SeatType> seatTypes = seatTypeRepository.findAllByDeleted(b, pageable);
         return mappingService.mapToResponse(seatTypes);
     }
 

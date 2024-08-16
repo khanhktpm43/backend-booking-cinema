@@ -5,7 +5,7 @@ import com.dev.booking.JWT.JwtRequestFilter;
 import com.dev.booking.Repository.CastRepository;
 import com.dev.booking.Repository.MovieCastRepository;
 import com.dev.booking.Repository.MovieRepository;
-import com.dev.booking.RequestDTO.CastDTO;
+import com.dev.booking.RequestDTO.CastReq;
 import com.dev.booking.RequestDTO.MovieCastDTO;
 import com.dev.booking.ResponseDTO.DetailResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,7 +40,7 @@ public class MovieCastService {
         if (movie == null) {
             return null;
         }
-        for (CastDTO castDTO : movieCastDTO.getCasts()) {
+        for (CastReq castDTO : movieCastDTO.getCasts()) {
             if (castDTO.getCast().getId() == null || !castRepository.existsById(castDTO.getCast().getId()) || (castDTO.getRoleCast() != 1 && castDTO.getRoleCast() != 2)) {
                 continue;
             }
@@ -67,7 +67,7 @@ public class MovieCastService {
     }
 
 
-    public DetailResponse<MovieCast> update(HttpServletRequest request, Long id, CastDTO castDTO) {
+    public DetailResponse<MovieCast> update(HttpServletRequest request, Long id, CastReq castDTO) {
         User userReq = jwtRequestFilter.getUserRequest(request);
         MovieCast movieCast1 = movieCastRepository.findById(id).orElseThrow();
         movieCast1.setCast(castDTO.getCast());

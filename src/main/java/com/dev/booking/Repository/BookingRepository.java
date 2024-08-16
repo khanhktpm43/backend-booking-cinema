@@ -44,16 +44,16 @@ public interface BookingRepository extends JpaRepository<Booking,Long> {
 //            "GROUP BY YEAR(b.bookingDate), MONTH(b.bookingDate) " +
 //            "ORDER BY YEAR(b.bookingDate), MONTH(b.bookingDate) ASC")
 //    List<MonthlyRevenue> findMonthlyRevenue(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
-@Query("SELECT new com.dev.booking.ResponseDTO.MonthlyRevenue(" +
-        "CONCAT(YEAR(b.bookingDate), '-', " +
-        "LPAD(CAST(MONTH(b.bookingDate) AS STRING), 2, '0')), " +
-        "SUM(CASE WHEN b.paymentStatus = com.dev.booking.Entity.PaymentStatus.SUCCESS THEN b.totalPrice ELSE 0 END), " +
-        "SUM(CASE WHEN b.paymentStatus = com.dev.booking.Entity.PaymentStatus.FAILED THEN b.totalPrice ELSE 0 END)) " +
-        "FROM Booking b " +
-        "WHERE DATE(b.bookingDate) BETWEEN :startDate AND :endDate " +
-        "GROUP BY CONCAT(YEAR(b.bookingDate), '-', LPAD(CAST(MONTH(b.bookingDate) AS STRING), 2, '0')) " +
-        "ORDER BY YEAR(b.bookingDate), MONTH(b.bookingDate) ASC")
-List<MonthlyRevenue> findMonthlyRevenue(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    @Query("SELECT new com.dev.booking.ResponseDTO.MonthlyRevenue(" +
+            "CONCAT(YEAR(b.bookingDate), '-', " +
+            "LPAD(CAST(MONTH(b.bookingDate) AS STRING), 2, '0')), " +
+            "SUM(CASE WHEN b.paymentStatus = com.dev.booking.Entity.PaymentStatus.SUCCESS THEN b.totalPrice ELSE 0 END), " +
+            "SUM(CASE WHEN b.paymentStatus = com.dev.booking.Entity.PaymentStatus.FAILED THEN b.totalPrice ELSE 0 END)) " +
+            "FROM Booking b " +
+            "WHERE DATE(b.bookingDate) BETWEEN :startDate AND :endDate " +
+            "GROUP BY CONCAT(YEAR(b.bookingDate), '-', LPAD(CAST(MONTH(b.bookingDate) AS STRING), 2, '0')) " +
+            "ORDER BY YEAR(b.bookingDate), MONTH(b.bookingDate) ASC")
+    List<MonthlyRevenue> findMonthlyRevenue(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
     @Query("SELECT new com.dev.booking.ResponseDTO.MovieRevenue(" +
             "s.movie.name, " +

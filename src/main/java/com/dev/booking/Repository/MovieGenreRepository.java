@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MovieGenreRepository extends JpaRepository<MovieGenre, Long> {
@@ -14,4 +15,8 @@ public interface MovieGenreRepository extends JpaRepository<MovieGenre, Long> {
     void deleteByGenre(Genre genre);
 
     List<MovieGenre> findByMovie(Movie movie);
+
+    boolean existsByMovieIdAndGenre(Long id, Genre genre);
+
+    Optional<MovieGenre> findByMovieIdAndGenre(Long id, Genre genre);
 }

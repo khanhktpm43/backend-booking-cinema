@@ -95,7 +95,7 @@ public class ShowtimeService {
     public Page<DetailResponse<Showtime>> getByDeleted(boolean b, int page, int size, String[] sort) {
         Sort.Direction direction = Sort.Direction.fromString(sort[1]);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
-        Page<Showtime> showtimes = showtimeRepository.findByDeleted(false, pageable);
+        Page<Showtime> showtimes = showtimeRepository.findByDeleted(b, pageable);
         return mappingService.mapToResponse(showtimes);
     }
 
@@ -119,6 +119,7 @@ public class ShowtimeService {
     public DetailResponse<Showtime> update(HttpServletRequest request, Long id, Showtime showtime) {
         User userReq = jwtRequestFilter.getUserRequest(request);
         Showtime showtime1 = showtimeRepository.findById(id).orElseThrow();
+        showtime.setRoom(roomRepository.findById(showtime.getRoom().getId()).orElseThrow());
         showtime.setUpdatedAt(LocalDateTime.now());
         showtime.setUpdatedBy(userReq);
         showtime.setCreatedAt(showtime1.getCreatedAt());
