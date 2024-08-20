@@ -122,7 +122,7 @@ public class RoomController {
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
     public  ResponseEntity<ResponseObject<Room>> restore(@PathVariable Long id, HttpServletRequest request){
-        if (roomRepository.existsByIdAndDeleted(id, true)) {
+        if (!roomRepository.existsByIdAndDeleted(id, true)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseObject<>("id does not exist",null));
         }
         Room room = roomService.restore(request, id);

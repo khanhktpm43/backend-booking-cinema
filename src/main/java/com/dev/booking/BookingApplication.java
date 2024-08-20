@@ -1,7 +1,7 @@
 package com.dev.booking;
 
-import com.dev.booking.TestEvent.MyDog;
-import com.dev.booking.TestEvent.MyHouse;
+//import com.dev.booking.TestEvent.MyDog;
+//import com.dev.booking.TestEvent.MyHouse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;

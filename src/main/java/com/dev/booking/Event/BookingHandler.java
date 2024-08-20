@@ -5,7 +5,7 @@ import com.dev.booking.Entity.PaymentStatus;
 import com.dev.booking.Repository.BookingRepository;
 import com.dev.booking.Service.CustomerOrderService;
 import com.dev.booking.Service.TicketService;
-import com.dev.booking.TestEvent.DoorBellEvent;
+//import com.dev.booking.TestEvent.DoorBellEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.diagnostics.FailureAnalysis;
 import org.springframework.context.event.EventListener;

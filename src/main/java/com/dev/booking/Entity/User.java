@@ -46,6 +46,7 @@ public class User  extends BaseEntity{
     private Set<Booking> bookings;
 
 
+
     public User(String name, String userName, String email, String phone, String passWord) {
         this.name = name;
         this.userName = userName;

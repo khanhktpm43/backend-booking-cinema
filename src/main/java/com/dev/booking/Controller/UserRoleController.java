@@ -58,10 +58,10 @@ public class UserRoleController {
                     UserRole userRole = new UserRole();
                     userRole.setUser(request.getUser());
                     userRole.setRole(role);
-                    userRole.setCreatedBy(userReq);
-                    userRole.setCreatedAt(LocalDateTime.now());
                     Example<UserRole> userRoleExample = Example.of(userRole);
-                    if(userRoleRepository.exists(userRoleExample)){
+                userRole.setCreatedBy(userReq);
+                userRole.setCreatedAt(LocalDateTime.now());
+                    if(userRoleRepository.existsByUserAndRole(request.getUser(), role)){
                         continue;
                     }
                 userRoleRepository.save(userRole);

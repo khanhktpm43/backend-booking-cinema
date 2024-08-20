@@ -1,24 +1,19 @@
 package com.dev.booking.Service;
 
-import com.dev.booking.Entity.Cast;
-import com.dev.booking.Entity.Genre;
-import com.dev.booking.Entity.Movie;
-import com.dev.booking.Entity.User;
+import com.dev.booking.Entity.*;
 import com.dev.booking.JWT.JwtRequestFilter;
-import com.dev.booking.Repository.MovieRepository;
-import com.dev.booking.Repository.UserRepository;
+import com.dev.booking.Repository.*;
+import com.dev.booking.RequestDTO.CastReq;
 import com.dev.booking.ResponseDTO.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -30,7 +25,6 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class MovieService {
@@ -42,6 +36,14 @@ public class MovieService {
     private MappingService mappingService;
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
+    @Autowired
+    private GenreRepository genreRepository;
+    @Autowired
+    private MovieGenreRepository movieGenreRepository;
+    @Autowired
+    private CastRepository castRepository;
+    @Autowired
+    private MovieCastRepository movieCastRepository;
 
     @Value("${upload.path}")
     private String uploadPath;
@@ -200,5 +202,87 @@ public class MovieService {
         movie.setUpdatedAt(LocalDateTime.now());
         movie.setUpdatedBy(userReq);
         return movieRepository.save(movie);
+    }
+
+    @Transactional
+    public DetailResponse<MovieResponse> attachGenres(HttpServletRequest request,Long id, List<Genre> genres) {
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if (userReq == null || id == null || !movieRepository.existsById(id) || genres.isEmpty()) {
+            return null;
+        }
+        Movie movie = movieRepository.findById(id).orElse(null);
+        if (movie == null) {
+            return null;
+        }
+        for (Genre genre : genres) {
+            if (genre.getId() == null || !genreRepository.existsById(genre.getId())) {
+                continue;
+            }
+            Genre managedGenre = genreRepository.findById(genre.getId()).orElse(null);
+            if (managedGenre == null) {
+                continue;
+            }
+            MovieGenre movieGenre = new MovieGenre();
+            movieGenre.setMovie(movie);
+            movieGenre.setGenre(managedGenre);
+            movieGenre.setCreatedAt(LocalDateTime.now());
+            movieGenre.setUpdatedAt(null);
+            movieGenre.setCreatedBy(userReq);
+            movieGenreRepository.save(movieGenre);
+        }
+        MovieResponse movie1 = getById(id);
+        return new DetailResponse<>(movie1, movie1.getMovie().getCreatedBy(), movie1.getMovie().getUpdatedBy(), movie1.getMovie().getCreatedAt(), movie1.getMovie().getUpdatedAt());
+    }
+@Transactional
+    public DetailResponse<MovieResponse> attachCast(HttpServletRequest request, Long id, List<CastReq> casts) {
+        User userReq = jwtRequestFilter.getUserRequest(request);
+        if (userReq == null || id == null || !movieRepository.existsById(id) || casts.isEmpty()) {
+            return null;
+        }
+        Movie movie = movieRepository.findById(id).orElse(null);
+        if (movie == null) {
+            return null;
+        }
+        for (CastReq castDTO : casts) {
+            if (castDTO.getCast().getId() == null || !castRepository.existsById(castDTO.getCast().getId()) || (castDTO.getRoleCast() != 1 && castDTO.getRoleCast() != 2)) {
+                continue;
+            }
+            Cast managedCast = castRepository.findById(castDTO.getCast().getId()).orElse(null);
+            if (managedCast == null) {
+                continue;
+            }
+            MovieCast movieCast = new MovieCast();
+            movieCast.setMovie(movie);
+            movieCast.setCast(managedCast);
+            movieCast.setRoleCast(castDTO.getRoleCast());
+            movieCast.setCreatedAt(LocalDateTime.now());
+            movieCast.setUpdatedAt(null);
+            movieCast.setCreatedBy(userReq);
+            movieCastRepository.save(movieCast);
+        }
+
+        MovieResponse movie1 = getById(id);
+        return new DetailResponse<>(movie1, movie1.getMovie().getCreatedBy(), movie1.getMovie().getUpdatedBy(), movie1.getMovie().getCreatedAt(), movie1.getMovie().getUpdatedAt());
+
+    }
+
+    public DetailResponse<MovieResponse> detachGenre( Long id, Genre genre) {
+        if(!movieGenreRepository.existsByMovieIdAndGenre(id, genre))
+            return null;
+        MovieGenre movieGenre = movieGenreRepository.findByMovieIdAndGenre(id, genre).orElseThrow();
+        movieGenreRepository.deleteById(movieGenre.getId());
+        MovieResponse movie1 = getById(id);
+        return new DetailResponse<>(movie1, movie1.getMovie().getCreatedBy(), movie1.getMovie().getUpdatedBy(), movie1.getMovie().getCreatedAt(), movie1.getMovie().getUpdatedAt());
+
+    }
+
+    public DetailResponse<MovieResponse> detachCast(Long id, CastReq cast) {
+        if(!movieCastRepository.existsByMovieIdAndCastAndRoleCast(id, cast.getCast(), cast.getRoleCast()))
+            return null;
+        MovieCast movieCast =  movieCastRepository.findByMovieIdAndCastAndRoleCast(id, cast.getCast(), cast.getRoleCast()).orElseThrow();
+        movieCastRepository.deleteById(movieCast.getId());
+        MovieResponse movie1 = getById(id);
+        return new DetailResponse<>(movie1, movie1.getMovie().getCreatedBy(), movie1.getMovie().getUpdatedBy(), movie1.getMovie().getCreatedAt(), movie1.getMovie().getUpdatedAt());
+
     }
 }
